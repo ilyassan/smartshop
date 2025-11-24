@@ -15,6 +15,5 @@ public class AuthResponse {
     private Long id;
     private String username;
     private UserRole role;
-    private Long clientId;
     private String message;
 }

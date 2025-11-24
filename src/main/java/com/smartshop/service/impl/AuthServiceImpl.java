@@ -41,7 +41,6 @@ public class AuthServiceImpl implements AuthService {
                 .id(user.getId())
                 .username(user.getUsername())
                 .role(user.getRole())
-                .clientId(user.getClientId())
                 .message("Login successful")
                 .build();
     }
@@ -62,7 +61,6 @@ public class AuthServiceImpl implements AuthService {
                 .id(user.getId())
                 .username(user.getUsername())
                 .role(user.getRole())
-                .clientId(user.getClientId())
                 .build();
     }
 

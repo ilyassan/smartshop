@@ -38,7 +38,6 @@ public class DataSeeder implements CommandLineRunner {
                     .username("client1")
                     .password(passwordEncoder.encode("client123"))
                     .role(UserRole.CLIENT)
-                    .clientId(null)
                     .build();
             userRepository.save(client);
             log.info("Created CLIENT user: username=client1, password=client123");

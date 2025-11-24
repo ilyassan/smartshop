@@ -1,7 +1,5 @@
 package com.smartshop.entity;
 
-import com.smartshop.enums.CustomerTier;
-import com.smartshop.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,44 +10,45 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "products")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Username is required")
-    @Column(unique = true, nullable = false)
-    private String username;
-
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = "Product name is required")
     @Column(nullable = false)
-    private String password;
-
-    @NotNull(message = "Role is required")
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
-
     private String name;
 
-    private String email;
+    @NotBlank(message = "SKU is required")
+    @Column(unique = true, nullable = false)
+    private String sku;
 
-    private String phone;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
-    private String address;
+    @NotNull(message = "Unit price is required")
+    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal unitPrice;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "loyalty_tier")
-    private CustomerTier loyaltyTier;
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer stock = 0;
+
+    private String category;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
