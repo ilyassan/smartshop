@@ -1,8 +1,5 @@
 package com.smartshop.service.impl;
 
-import com.smartshop.dto.ClientResponse;
-import com.smartshop.dto.CreateClientRequest;
-import com.smartshop.dto.UpdateClientRequest;
 import com.smartshop.entity.User;
 import com.smartshop.enums.CustomerTier;
 import com.smartshop.enums.UserRole;
@@ -16,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,68 +24,67 @@ public class ClientServiceImpl implements ClientService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public ClientResponse createClient(CreateClientRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
+    public User createClient(User user) {
+        if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        User client = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(UserRole.CLIENT)
-                .name(request.getName())
-                .email(request.getEmail())
-                .phone(request.getPhone())
-                .address(request.getAddress())
-                .loyaltyTier(CustomerTier.BASIC)
-                .build();
+        // Encode password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        User savedClient = userRepository.save(client);
+        // Force role to CLIENT
+        user.setRole(UserRole.CLIENT);
+
+        // Set default loyalty tier if not provided
+        if (user.getLoyaltyTier() == null) {
+            user.setLoyaltyTier(CustomerTier.BASIC);
+        }
+
+        User savedClient = userRepository.save(user);
         log.info("Created new client with username: {}", savedClient.getUsername());
 
-        return mapToResponse(savedClient);
+        return savedClient;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ClientResponse getClientById(Long id) {
-        User client = userRepository.findByIdAndRole(id, UserRole.CLIENT)
+    public User getClientById(Long id) {
+        return userRepository.findByIdAndRole(id, UserRole.CLIENT)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + id));
-
-        return mapToResponse(client);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ClientResponse> getAllClients() {
-        return userRepository.findByRole(UserRole.CLIENT)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public List<User> getAllClients() {
+        return userRepository.findByRole(UserRole.CLIENT);
     }
 
     @Override
-    public ClientResponse updateClient(Long id, UpdateClientRequest request) {
-        User client = userRepository.findByIdAndRole(id, UserRole.CLIENT)
+    public User updateClient(Long id, User user) {
+        User existingClient = userRepository.findByIdAndRole(id, UserRole.CLIENT)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + id));
 
-        if (request.getName() != null) {
-            client.setName(request.getName());
+        // Update only allowed fields
+        if (user.getName() != null) {
+            existingClient.setName(user.getName());
         }
-        if (request.getEmail() != null) {
-            client.setEmail(request.getEmail());
+        if (user.getEmail() != null) {
+            existingClient.setEmail(user.getEmail());
         }
-        if (request.getPhone() != null) {
-            client.setPhone(request.getPhone());
+        if (user.getPhone() != null) {
+            existingClient.setPhone(user.getPhone());
         }
-        if (request.getAddress() != null) {
-            client.setAddress(request.getAddress());
+        if (user.getAddress() != null) {
+            existingClient.setAddress(user.getAddress());
+        }
+        if (user.getLoyaltyTier() != null) {
+            existingClient.setLoyaltyTier(user.getLoyaltyTier());
         }
 
-        User updatedClient = userRepository.save(client);
+        User updatedClient = userRepository.save(existingClient);
         log.info("Updated client with id: {}", updatedClient.getId());
 
-        return mapToResponse(updatedClient);
+        return updatedClient;
     }
 
     @Override
@@ -99,19 +94,5 @@ public class ClientServiceImpl implements ClientService {
 
         userRepository.delete(client);
         log.info("Deleted client with id: {}", id);
-    }
-
-    private ClientResponse mapToResponse(User user) {
-        return ClientResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .name(user.getName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .address(user.getAddress())
-                .loyaltyTier(user.getLoyaltyTier())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
     }
 }

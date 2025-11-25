@@ -1,20 +1,18 @@
 package com.smartshop.service;
 
-import com.smartshop.dto.ClientResponse;
-import com.smartshop.dto.CreateClientRequest;
-import com.smartshop.dto.UpdateClientRequest;
+import com.smartshop.entity.User;
 
 import java.util.List;
 
 public interface ClientService {
 
-    ClientResponse createClient(CreateClientRequest request);
+    User createClient(User user);
 
-    ClientResponse getClientById(Long id);
+    User getClientById(Long id);
 
-    List<ClientResponse> getAllClients();
+    List<User> getAllClients();
 
-    ClientResponse updateClient(Long id, UpdateClientRequest request);
+    User updateClient(Long id, User user);
 
     void deleteClient(Long id);
 }
