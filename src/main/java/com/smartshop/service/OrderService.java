@@ -14,6 +14,10 @@ public interface OrderService {
 
     List<Order> getAllOrders();
 
+    Order confirmOrder(Long orderId);
+
+    Order cancelOrder(Long orderId);
+
     class OrderItemRequest {
         public Long productId;
         public Integer quantity;

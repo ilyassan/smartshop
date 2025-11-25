@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
 
@@ -38,6 +38,18 @@ public class OrderController {
     public ResponseEntity<List<Order>> getAllOrders() {
         List<Order> orders = orderService.getAllOrders();
         return ResponseEntity.ok(orders);
+    }
+
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<Order> confirmOrder(@PathVariable Long id) {
+        Order confirmedOrder = orderService.confirmOrder(id);
+        return ResponseEntity.ok(confirmedOrder);
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<Order> cancelOrder(@PathVariable Long id) {
+        Order canceledOrder = orderService.cancelOrder(id);
+        return ResponseEntity.ok(canceledOrder);
     }
 
     public static class CreateOrderRequest {

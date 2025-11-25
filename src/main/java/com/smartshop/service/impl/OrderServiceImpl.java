@@ -149,4 +149,48 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
+
+    @Override
+    public Order confirmOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        // Validate order can be confirmed
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING orders can be confirmed. Current status: " + order.getStatus());
+        }
+
+        // Check if order has at least one payment
+        if (order.getRemainingAmount().compareTo(order.getTotalTTC()) == 0) {
+            throw new IllegalStateException("Order must have at least one payment before confirmation");
+        }
+
+        order.setStatus(OrderStatus.CONFIRMED);
+        Order confirmedOrder = orderRepository.save(order);
+        log.info("Confirmed order with id: {}", orderId);
+
+        return confirmedOrder;
+    }
+
+    @Override
+    public Order cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        // Validate order can be canceled
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING orders can be canceled. Current status: " + order.getStatus());
+        }
+
+        // Check if order has any payments
+        if (order.getRemainingAmount().compareTo(order.getTotalTTC()) != 0) {
+            throw new IllegalStateException("Cannot cancel order that has payments. Remaining amount: " + order.getRemainingAmount() + ", Total: " + order.getTotalTTC());
+        }
+
+        order.setStatus(OrderStatus.CANCELED);
+        Order canceledOrder = orderRepository.save(order);
+        log.info("Canceled order with id: {}", orderId);
+
+        return canceledOrder;
+    }
 }
