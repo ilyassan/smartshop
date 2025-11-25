@@ -4,6 +4,7 @@ import com.smartshop.entity.*;
 import com.smartshop.enums.OrderStatus;
 import com.smartshop.exception.ResourceNotFoundException;
 import com.smartshop.repository.*;
+import com.smartshop.service.LoyaltyTierService;
 import com.smartshop.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
+    private final LoyaltyTierService loyaltyTierService;
 
     @Override
     public Payment createPayment(Payment payment) {
@@ -59,17 +61,16 @@ public class PaymentServiceImpl implements PaymentService {
         if (isFirstPayment) {
             log.info("First payment for order {}, performing stock deduction and coupon marking", order.getId());
 
-            // 1. Deduct stock for this order
             deductStockForOrder(order);
 
-            // 2. Mark coupon as used if order has a coupon
             if (order.getCouponId() != null) {
                 markCouponAsUsed(order.getCouponId());
             }
 
-            // 3. Check other pending orders and reject if insufficient stock
             checkAndRejectPendingOrders();
         }
+
+        loyaltyTierService.checkAndUpgradeTier(order.getUserId());
 
         return savedPayment;
     }

@@ -12,6 +12,7 @@ import com.smartshop.repository.OrderItemRepository;
 import com.smartshop.repository.OrderRepository;
 import com.smartshop.repository.ProductRepository;
 import com.smartshop.repository.UserRepository;
+import com.smartshop.service.LoyaltyTierService;
 import com.smartshop.service.OrderService;
 import com.smartshop.util.CustomerTierDiscount;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CouponRepository couponRepository;
+    private final LoyaltyTierService loyaltyTierService;
 
     @Override
     public Order createOrder(Long userId, List<OrderItemRequest> items, String couponCode) {
@@ -168,6 +170,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CONFIRMED);
         Order confirmedOrder = orderRepository.save(order);
         log.info("Confirmed order with id: {}", orderId);
+
+        loyaltyTierService.checkAndUpgradeTier(order.getUserId());
 
         return confirmedOrder;
     }
