@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface OrderService {
 
-    Order createOrder(Long userId, List<OrderItemRequest> items);
+    Order createOrder(Long userId, List<OrderItemRequest> items, String couponCode);
 
     Order getOrderById(Long id);
 

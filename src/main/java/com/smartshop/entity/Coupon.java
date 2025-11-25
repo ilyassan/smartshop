@@ -32,6 +32,10 @@ public class Coupon {
     @Column(name = "discount_percentage", nullable = false, precision = 5, scale = 2)
     private BigDecimal discountPercentage;
 
+    @Column(name = "is_used", nullable = false)
+    @Builder.Default
+    private Boolean isUsed = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

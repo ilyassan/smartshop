@@ -1,14 +1,19 @@
 package com.smartshop.service.impl;
 
+import com.smartshop.entity.Coupon;
 import com.smartshop.entity.Order;
 import com.smartshop.entity.OrderItem;
 import com.smartshop.entity.Product;
+import com.smartshop.entity.User;
 import com.smartshop.enums.OrderStatus;
 import com.smartshop.exception.ResourceNotFoundException;
+import com.smartshop.repository.CouponRepository;
 import com.smartshop.repository.OrderItemRepository;
 import com.smartshop.repository.OrderRepository;
 import com.smartshop.repository.ProductRepository;
+import com.smartshop.repository.UserRepository;
 import com.smartshop.service.OrderService;
+import com.smartshop.util.CustomerTierDiscount;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,16 +34,23 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final CouponRepository couponRepository;
 
     @Override
-    public Order createOrder(Long userId, List<OrderItemRequest> items) {
+    public Order createOrder(Long userId, List<OrderItemRequest> items, String couponCode) {
         if (items == null || items.isEmpty()) {
             throw new IllegalArgumentException("Order must contain at least one item");
         }
 
+        // Get user to retrieve loyalty tier
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal subtotalHT = BigDecimal.ZERO;
 
+        // Calculate subtotal and validate stock
         for (OrderItemRequest itemRequest : items) {
             Product product = productRepository.findByIdAndDeletedFalse(itemRequest.productId)
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + itemRequest.productId));
@@ -62,31 +74,55 @@ public class OrderServiceImpl implements OrderService {
             orderItems.add(orderItem);
         }
 
+        // Calculate loyalty discount
+        BigDecimal loyaltyDiscountAmount = CustomerTierDiscount.applyLoyaltyDiscount(user.getLoyaltyTier(), subtotalHT);
+
+        // Calculate coupon discount and get couponId
+        BigDecimal couponDiscountAmount = BigDecimal.ZERO;
+        Long couponId = null;
+        if (couponCode != null && !couponCode.trim().isEmpty()) {
+            Coupon coupon = couponRepository.findByCode(couponCode)
+                    .orElseThrow(() -> new ResourceNotFoundException("Coupon not found with code: " + couponCode));
+
+            // Check if coupon is already used
+            if (coupon.getIsUsed()) {
+                throw new IllegalArgumentException("Coupon has already been used");
+            }
+
+            couponDiscountAmount = subtotalHT.multiply(coupon.getDiscountPercentage().divide(new BigDecimal("100")))
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            couponId = coupon.getId();
+            log.info("Applied coupon: {} (will be marked as used when payment is made)", couponCode);
+        }
+
+        // Calculate total discount and amount after discount
+        BigDecimal totalDiscount = loyaltyDiscountAmount.add(couponDiscountAmount);
+        BigDecimal amountAfterDiscountHT = subtotalHT.subtract(totalDiscount);
+
+        // Calculate TVA (20%)
         BigDecimal tvaRate = new BigDecimal("0.20");
-        BigDecimal amountAfterDiscountHT = subtotalHT;
         BigDecimal tva = amountAfterDiscountHT.multiply(tvaRate).setScale(2, RoundingMode.HALF_UP);
+
+        // Calculate final total TTC
         BigDecimal totalTTC = amountAfterDiscountHT.add(tva);
 
+        // Create order with subtotalHT, totalTTC, remainingAmount, and couponId
         Order order = Order.builder()
                 .userId(userId)
                 .orderDate(LocalDateTime.now())
                 .status(OrderStatus.PENDING)
                 .subtotalHT(subtotalHT)
-                .loyaltyDiscount(BigDecimal.ZERO)
-                .couponDiscount(BigDecimal.ZERO)
-                .totalDiscount(BigDecimal.ZERO)
-                .amountAfterDiscountHT(amountAfterDiscountHT)
-                .tvaRate(tvaRate)
-                .tva(tva)
                 .totalTTC(totalTTC)
-                .amountPaid(BigDecimal.ZERO)
                 .remainingAmount(totalTTC)
-                .stockReserved(false)
+                .couponId(couponId)
                 .build();
 
         Order savedOrder = orderRepository.save(order);
-        log.info("Created order with id: {} for user: {}", savedOrder.getId(), userId);
+        log.info("Created order with id: {} for user: {}. Subtotal: {}, Loyalty discount: {}, Coupon discount: {}, Total: {}",
+                savedOrder.getId(), userId, subtotalHT, loyaltyDiscountAmount, couponDiscountAmount, totalTTC);
 
+        // Save order items
         for (OrderItem item : orderItems) {
             item.setOrderId(savedOrder.getId());
             orderItemRepository.save(item);

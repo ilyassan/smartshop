@@ -43,45 +43,16 @@ public class Order {
     @Column(name = "subtotal_ht", nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotalHT;
 
-    @Column(name = "loyalty_discount", nullable = false, precision = 10, scale = 2)
-    @Builder.Default
-    private BigDecimal loyaltyDiscount = BigDecimal.ZERO;
-
-    @Column(name = "coupon_discount", nullable = false, precision = 10, scale = 2)
-    @Builder.Default
-    private BigDecimal couponDiscount = BigDecimal.ZERO;
-
-    @Column(name = "total_discount", nullable = false, precision = 10, scale = 2)
-    @Builder.Default
-    private BigDecimal totalDiscount = BigDecimal.ZERO;
-
-    @NotNull(message = "Amount after discount HT is required")
-    @Column(name = "amount_after_discount_ht", nullable = false, precision = 10, scale = 2)
-    private BigDecimal amountAfterDiscountHT;
-
-    @Column(name = "tva_rate", nullable = false, precision = 5, scale = 2)
-    @Builder.Default
-    private BigDecimal tvaRate = new BigDecimal("0.20");
-
-    @NotNull(message = "TVA is required")
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal tva;
-
     @NotNull(message = "Total TTC is required")
     @Column(name = "total_ttc", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalTTC;
-
-    @Column(name = "amount_paid", nullable = false, precision = 10, scale = 2)
-    @Builder.Default
-    private BigDecimal amountPaid = BigDecimal.ZERO;
 
     @NotNull(message = "Remaining amount is required")
     @Column(name = "remaining_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal remainingAmount;
 
-    @Column(name = "stock_reserved", nullable = false)
-    @Builder.Default
-    private Boolean stockReserved = false;
+    @Column(name = "coupon_id")
+    private Long couponId;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
