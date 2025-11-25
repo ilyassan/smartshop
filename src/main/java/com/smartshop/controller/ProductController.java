@@ -1,7 +1,9 @@
 package com.smartshop.controller;
 
 import com.smartshop.entity.Product;
+import com.smartshop.exception.UnauthorizedException;
 import com.smartshop.service.ProductService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,14 +15,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product, HttpSession session) {
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null || !userRole.equals("ADMIN")) {
+            throw new UnauthorizedException("Only admins can create products");
+        }
+
         Product createdProduct = productService.createProduct(product);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
@@ -48,13 +55,24 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(
             @PathVariable Long id,
-            @RequestBody Product product) {
+            @RequestBody Product product,
+            HttpSession session) {
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null || !userRole.equals("ADMIN")) {
+            throw new UnauthorizedException("Only admins can update products");
+        }
+
         Product updatedProduct = productService.updateProduct(id, product);
         return ResponseEntity.ok(updatedProduct);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id, HttpSession session) {
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null || !userRole.equals("ADMIN")) {
+            throw new UnauthorizedException("Only admins can delete products");
+        }
+
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }

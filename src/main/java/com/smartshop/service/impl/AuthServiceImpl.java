@@ -35,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         session.setAttribute(SESSION_USER_KEY, user.getId());
+        session.setAttribute("userRole", user.getRole().name());
         log.info("User {} logged in successfully with role {}", user.getUsername(), user.getRole());
 
         return AuthResponse.builder()
