@@ -1,22 +1,22 @@
 package com.smartshop.service;
 
-import com.smartshop.entity.Order;
+import com.smartshop.dto.OrderDTO;
 
 import java.util.List;
 
 public interface OrderService {
 
-    Order createOrder(Long userId, List<OrderItemRequest> items, String couponCode);
+    OrderDTO createOrder(Long userId, List<OrderItemRequest> items, String couponCode);
 
-    Order getOrderById(Long id);
+    OrderDTO getOrderById(Long id);
 
-    List<Order> getOrdersByUserId(Long userId);
+    List<OrderDTO> getOrdersByUserId(Long userId);
 
-    List<Order> getAllOrders();
+    List<OrderDTO> getAllOrders();
 
-    Order confirmOrder(Long orderId);
+    OrderDTO confirmOrder(Long orderId);
 
-    Order cancelOrder(Long orderId);
+    OrderDTO cancelOrder(Long orderId);
 
     class OrderItemRequest {
         public Long productId;

@@ -2,8 +2,10 @@ package com.smartshop.service.impl;
 
 import com.smartshop.dto.AuthResponse;
 import com.smartshop.dto.LoginRequest;
+import com.smartshop.dto.UserDTO;
 import com.smartshop.entity.User;
 import com.smartshop.exception.UnauthorizedException;
+import com.smartshop.mapper.UserMapper;
 import com.smartshop.repository.UserRepository;
 import com.smartshop.service.AuthService;
 import jakarta.servlet.http.HttpSession;
@@ -22,6 +24,7 @@ public class AuthServiceImpl implements AuthService {
     private static final String SESSION_USER_KEY = "LOGGED_IN_USER";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest, HttpSession session) {
@@ -38,10 +41,14 @@ public class AuthServiceImpl implements AuthService {
         session.setAttribute("userRole", user.getRole().name());
         log.info("User {} logged in successfully with role {}", user.getUsername(), user.getRole());
 
+        // Convert to DTO and ensure password is not returned
+        UserDTO userDTO = userMapper.toDTO(user);
+        userDTO.setPassword(null);
+
         return AuthResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .role(user.getRole())
+                .id(userDTO.getId())
+                .username(userDTO.getUsername())
+                .role(userDTO.getRole())
                 .message("Login successful")
                 .build();
     }
@@ -58,10 +65,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("Session invalid. Please login again"));
 
+        // Convert to DTO and ensure password is not returned
+        UserDTO userDTO = userMapper.toDTO(user);
+        userDTO.setPassword(null);
+
         return AuthResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .role(user.getRole())
+                .id(userDTO.getId())
+                .username(userDTO.getUsername())
+                .role(userDTO.getRole())
                 .build();
     }
 

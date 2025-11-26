@@ -1,10 +1,11 @@
 package com.smartshop.controller;
 
 import com.smartshop.dto.ClientStatistics;
-import com.smartshop.entity.User;
+import com.smartshop.dto.UserDTO;
 import com.smartshop.exception.UnauthorizedException;
 import com.smartshop.service.ClientService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,14 +24,14 @@ public class ClientController {
     private final ClientService clientService;
 
     @PostMapping
-    public ResponseEntity<User> createClient(@RequestBody User user) {
+    public ResponseEntity<UserDTO> createClient(@Valid @RequestBody UserDTO user) {
         log.info("Creating new client with username: {}", user.getUsername());
-        User createdClient = clientService.createClient(user);
+        UserDTO createdClient = clientService.createClient(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdClient);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getClientById(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<UserDTO> getClientById(@PathVariable Long id, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
         if (loggedInUserId == null) {
             throw new UnauthorizedException("Please login first");
@@ -42,24 +43,24 @@ public class ClientController {
         }
 
         log.info("Fetching client with id: {}", id);
-        User client = clientService.getClientById(id);
+        UserDTO client = clientService.getClientById(id);
         return ResponseEntity.ok(client);
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllClients(HttpSession session) {
+    public ResponseEntity<List<UserDTO>> getAllClients(HttpSession session) {
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || !userRole.equals("ADMIN")) {
             throw new UnauthorizedException("Only admins can view all clients");
         }
 
         log.info("Fetching all clients");
-        List<User> clients = clientService.getAllClients();
+        List<UserDTO> clients = clientService.getAllClients();
         return ResponseEntity.ok(clients);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateClient(@PathVariable Long id, @RequestBody User user, HttpSession session) {
+    public ResponseEntity<UserDTO> updateClient(@PathVariable Long id, @Valid @RequestBody UserDTO user, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
         if (loggedInUserId == null) {
             throw new UnauthorizedException("Please login first");
@@ -71,7 +72,7 @@ public class ClientController {
         }
 
         log.info("Updating client with id: {}", id);
-        User updatedClient = clientService.updateClient(id, user);
+        UserDTO updatedClient = clientService.updateClient(id, user);
         return ResponseEntity.ok(updatedClient);
     }
 

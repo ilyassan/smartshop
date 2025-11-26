@@ -1,5 +1,6 @@
 package com.smartshop.service.impl;
 
+import com.smartshop.dto.OrderDTO;
 import com.smartshop.entity.Coupon;
 import com.smartshop.entity.Order;
 import com.smartshop.entity.OrderItem;
@@ -7,6 +8,7 @@ import com.smartshop.entity.Product;
 import com.smartshop.entity.User;
 import com.smartshop.enums.OrderStatus;
 import com.smartshop.exception.ResourceNotFoundException;
+import com.smartshop.mapper.OrderMapper;
 import com.smartshop.repository.CouponRepository;
 import com.smartshop.repository.OrderItemRepository;
 import com.smartshop.repository.OrderRepository;
@@ -38,9 +40,10 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final CouponRepository couponRepository;
     private final LoyaltyTierService loyaltyTierService;
+    private final OrderMapper orderMapper;
 
     @Override
-    public Order createOrder(Long userId, List<OrderItemRequest> items, String couponCode) {
+    public OrderDTO createOrder(Long userId, List<OrderItemRequest> items, String couponCode) {
         if (items == null || items.isEmpty()) {
             throw new IllegalArgumentException("Order must contain at least one item");
         }
@@ -130,30 +133,33 @@ public class OrderServiceImpl implements OrderService {
             orderItemRepository.save(item);
         }
 
-        return savedOrder;
+        return orderMapper.toDTO(savedOrder);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Order getOrderById(Long id) {
-        return orderRepository.findById(id)
+    public OrderDTO getOrderById(Long id) {
+        Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+        return orderMapper.toDTO(order);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Order> getOrdersByUserId(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public List<OrderDTO> getOrdersByUserId(Long userId) {
+        List<Order> orders = orderRepository.findByUserId(userId);
+        return orderMapper.toDTOList(orders);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<OrderDTO> getAllOrders() {
+        List<Order> orders = orderRepository.findAll();
+        return orderMapper.toDTOList(orders);
     }
 
     @Override
-    public Order confirmOrder(Long orderId) {
+    public OrderDTO confirmOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
@@ -173,11 +179,11 @@ public class OrderServiceImpl implements OrderService {
 
         loyaltyTierService.checkAndUpgradeTier(order.getUserId());
 
-        return confirmedOrder;
+        return orderMapper.toDTO(confirmedOrder);
     }
 
     @Override
-    public Order cancelOrder(Long orderId) {
+    public OrderDTO cancelOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
@@ -195,6 +201,6 @@ public class OrderServiceImpl implements OrderService {
         Order canceledOrder = orderRepository.save(order);
         log.info("Canceled order with id: {}", orderId);
 
-        return canceledOrder;
+        return orderMapper.toDTO(canceledOrder);
     }
 }

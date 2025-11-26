@@ -1,19 +1,19 @@
 package com.smartshop.service;
 
 import com.smartshop.dto.ClientStatistics;
-import com.smartshop.entity.User;
+import com.smartshop.dto.UserDTO;
 
 import java.util.List;
 
 public interface ClientService {
 
-    User createClient(User user);
+    UserDTO createClient(UserDTO userDTO);
 
-    User getClientById(Long id);
+    UserDTO getClientById(Long id);
 
-    List<User> getAllClients();
+    List<UserDTO> getAllClients();
 
-    User updateClient(Long id, User user);
+    UserDTO updateClient(Long id, UserDTO userDTO);
 
     void deleteClient(Long id);
 

@@ -1,6 +1,7 @@
 package com.smartshop.service.impl;
 
 import com.smartshop.dto.ClientStatistics;
+import com.smartshop.dto.UserDTO;
 import com.smartshop.entity.Order;
 import com.smartshop.entity.Payment;
 import com.smartshop.entity.User;
@@ -8,6 +9,7 @@ import com.smartshop.enums.CustomerTier;
 import com.smartshop.enums.OrderStatus;
 import com.smartshop.enums.UserRole;
 import com.smartshop.exception.ResourceNotFoundException;
+import com.smartshop.mapper.UserMapper;
 import com.smartshop.repository.OrderRepository;
 import com.smartshop.repository.PaymentRepository;
 import com.smartshop.repository.UserRepository;
@@ -30,15 +32,18 @@ import java.util.stream.Collectors;
 public class ClientServiceImpl implements ClientService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
 
     @Override
-    public User createClient(User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
+    public UserDTO createClient(UserDTO userDTO) {
+        if (userRepository.existsByUsername(userDTO.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
+
+        User user = userMapper.toEntity(userDTO);
 
         // Encode password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -54,48 +59,53 @@ public class ClientServiceImpl implements ClientService {
         User savedClient = userRepository.save(user);
         log.info("Created new client with username: {}", savedClient.getUsername());
 
-        return savedClient;
+        UserDTO resultDTO = userMapper.toDTO(savedClient);
+        // Don't return password in response
+        resultDTO.setPassword(null);
+        return resultDTO;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public User getClientById(Long id) {
-        return userRepository.findByIdAndRole(id, UserRole.CLIENT)
+    public UserDTO getClientById(Long id) {
+        User client = userRepository.findByIdAndRole(id, UserRole.CLIENT)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + id));
+        UserDTO userDTO = userMapper.toDTO(client);
+        // Don't return password in response
+        userDTO.setPassword(null);
+        return userDTO;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> getAllClients() {
-        return userRepository.findByRole(UserRole.CLIENT);
+    public List<UserDTO> getAllClients() {
+        List<User> clients = userRepository.findByRole(UserRole.CLIENT);
+        return clients.stream()
+                .map(user -> {
+                    UserDTO dto = userMapper.toDTO(user);
+                    dto.setPassword(null); // Don't return passwords
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
-    public User updateClient(Long id, User user) {
+    public UserDTO updateClient(Long id, UserDTO userDTO) {
         User existingClient = userRepository.findByIdAndRole(id, UserRole.CLIENT)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + id));
 
-        // Update only allowed fields
-        if (user.getName() != null) {
-            existingClient.setName(user.getName());
-        }
-        if (user.getEmail() != null) {
-            existingClient.setEmail(user.getEmail());
-        }
-        if (user.getPhone() != null) {
-            existingClient.setPhone(user.getPhone());
-        }
-        if (user.getAddress() != null) {
-            existingClient.setAddress(user.getAddress());
-        }
-        if (user.getLoyaltyTier() != null) {
-            existingClient.setLoyaltyTier(user.getLoyaltyTier());
-        }
+        // Don't update password or username through this method
+        userDTO.setPassword(null);
+        userDTO.setUsername(null);
+        userDTO.setRole(null); // Don't allow role changes
 
+        userMapper.updateEntityFromDTO(userDTO, existingClient);
         User updatedClient = userRepository.save(existingClient);
         log.info("Updated client with id: {}", updatedClient.getId());
 
-        return updatedClient;
+        UserDTO resultDTO = userMapper.toDTO(updatedClient);
+        resultDTO.setPassword(null);
+        return resultDTO;
     }
 
     @Override

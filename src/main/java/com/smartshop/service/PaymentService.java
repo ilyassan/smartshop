@@ -1,20 +1,20 @@
 package com.smartshop.service;
 
-import com.smartshop.entity.Payment;
+import com.smartshop.dto.PaymentDTO;
 
 import java.util.List;
 
 public interface PaymentService {
 
-    Payment createPayment(Payment payment);
+    PaymentDTO createPayment(PaymentDTO paymentDTO);
 
-    Payment getPaymentById(Long id);
+    PaymentDTO getPaymentById(Long id);
 
-    List<Payment> getPaymentsByOrderId(Long orderId);
+    List<PaymentDTO> getPaymentsByOrderId(Long orderId);
 
-    List<Payment> getAllPayments();
+    List<PaymentDTO> getAllPayments();
 
-    Payment updatePayment(Long id, Payment payment);
+    PaymentDTO updatePayment(Long id, PaymentDTO paymentDTO);
 
     void deletePayment(Long id);
 }

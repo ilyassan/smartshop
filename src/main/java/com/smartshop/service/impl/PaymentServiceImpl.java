@@ -1,8 +1,10 @@
 package com.smartshop.service.impl;
 
+import com.smartshop.dto.PaymentDTO;
 import com.smartshop.entity.*;
 import com.smartshop.enums.OrderStatus;
 import com.smartshop.exception.ResourceNotFoundException;
+import com.smartshop.mapper.PaymentMapper;
 import com.smartshop.repository.*;
 import com.smartshop.service.LoyaltyTierService;
 import com.smartshop.service.PaymentService;
@@ -26,9 +28,13 @@ public class PaymentServiceImpl implements PaymentService {
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
     private final LoyaltyTierService loyaltyTierService;
+    private final PaymentMapper paymentMapper;
 
     @Override
-    public Payment createPayment(Payment payment) {
+    public PaymentDTO createPayment(PaymentDTO paymentDTO) {
+        // Convert DTO to entity
+        Payment payment = paymentMapper.toEntity(paymentDTO);
+
         // Get the order
         Order order = orderRepository.findById(payment.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + payment.getOrderId()));
@@ -72,7 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         loyaltyTierService.checkAndUpgradeTier(order.getUserId());
 
-        return savedPayment;
+        return paymentMapper.toDTO(savedPayment);
     }
 
     private void deductStockForOrder(Order order) {
@@ -145,57 +151,36 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Payment getPaymentById(Long id) {
-        return paymentRepository.findById(id)
+    public PaymentDTO getPaymentById(Long id) {
+        Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
+        return paymentMapper.toDTO(payment);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Payment> getPaymentsByOrderId(Long orderId) {
-        return paymentRepository.findByOrderIdOrderByPaymentNumberAsc(orderId);
+    public List<PaymentDTO> getPaymentsByOrderId(Long orderId) {
+        List<Payment> payments = paymentRepository.findByOrderIdOrderByPaymentNumberAsc(orderId);
+        return paymentMapper.toDTOList(payments);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Payment> getAllPayments() {
-        return paymentRepository.findAll();
+    public List<PaymentDTO> getAllPayments() {
+        List<Payment> payments = paymentRepository.findAll();
+        return paymentMapper.toDTOList(payments);
     }
 
     @Override
-    public Payment updatePayment(Long id, Payment payment) {
+    public PaymentDTO updatePayment(Long id, PaymentDTO paymentDTO) {
         Payment existingPayment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
 
-        if (payment.getAmount() != null) {
-            existingPayment.setAmount(payment.getAmount());
-        }
-        if (payment.getPaymentMethod() != null) {
-            existingPayment.setPaymentMethod(payment.getPaymentMethod());
-        }
-        if (payment.getPaymentDate() != null) {
-            existingPayment.setPaymentDate(payment.getPaymentDate());
-        }
-        if (payment.getCollectionDate() != null) {
-            existingPayment.setCollectionDate(payment.getCollectionDate());
-        }
-        if (payment.getReference() != null) {
-            existingPayment.setReference(payment.getReference());
-        }
-        if (payment.getBankName() != null) {
-            existingPayment.setBankName(payment.getBankName());
-        }
-        if (payment.getDueDate() != null) {
-            existingPayment.setDueDate(payment.getDueDate());
-        }
-        if (payment.getStatus() != null) {
-            existingPayment.setStatus(payment.getStatus());
-        }
-
+        paymentMapper.updateEntityFromDTO(paymentDTO, existingPayment);
         Payment updatedPayment = paymentRepository.save(existingPayment);
         log.info("Updated payment with id: {}", updatedPayment.getId());
 
-        return updatedPayment;
+        return paymentMapper.toDTO(updatedPayment);
     }
 
     @Override

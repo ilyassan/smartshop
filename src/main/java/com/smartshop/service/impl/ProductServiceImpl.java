@@ -1,7 +1,9 @@
 package com.smartshop.service.impl;
 
+import com.smartshop.dto.ProductDTO;
 import com.smartshop.entity.Product;
 import com.smartshop.exception.ResourceNotFoundException;
+import com.smartshop.mapper.ProductMapper;
 import com.smartshop.repository.ProductRepository;
 import com.smartshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -18,58 +20,47 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
     @Override
-    public Product createProduct(Product product) {
-        if (productRepository.existsBySku(product.getSku())) {
+    public ProductDTO createProduct(ProductDTO productDTO) {
+        if (productRepository.existsBySku(productDTO.getSku())) {
             throw new IllegalArgumentException("SKU already exists");
         }
 
+        Product product = productMapper.toEntity(productDTO);
         product.setDeleted(false);
         Product savedProduct = productRepository.save(product);
         log.info("Created new product with SKU: {}", savedProduct.getSku());
 
-        return savedProduct;
+        return productMapper.toDTO(savedProduct);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Product getProductById(Long id) {
-        return productRepository.findByIdAndDeletedFalse(id)
+    public ProductDTO getProductById(Long id) {
+        Product product = productRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        return productMapper.toDTO(product);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> getAllProducts(Pageable pageable) {
-        return productRepository.findByDeletedFalse(pageable);
+    public Page<ProductDTO> getAllProducts(Pageable pageable) {
+        Page<Product> products = productRepository.findByDeletedFalse(pageable);
+        return products.map(productMapper::toDTO);
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) {
+    public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         Product existingProduct = productRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
-        if (product.getName() != null) {
-            existingProduct.setName(product.getName());
-        }
-        if (product.getDescription() != null) {
-            existingProduct.setDescription(product.getDescription());
-        }
-        if (product.getUnitPrice() != null) {
-            existingProduct.setUnitPrice(product.getUnitPrice());
-        }
-        if (product.getStock() != null) {
-            existingProduct.setStock(product.getStock());
-        }
-        if (product.getCategory() != null) {
-            existingProduct.setCategory(product.getCategory());
-        }
-
+        productMapper.updateEntityFromDTO(productDTO, existingProduct);
         Product updatedProduct = productRepository.save(existingProduct);
         log.info("Updated product with id: {}", updatedProduct.getId());
 
-        return updatedProduct;
+        return productMapper.toDTO(updatedProduct);
     }
 
     @Override

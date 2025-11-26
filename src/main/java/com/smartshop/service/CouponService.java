@@ -1,20 +1,20 @@
 package com.smartshop.service;
 
-import com.smartshop.entity.Coupon;
+import com.smartshop.dto.CouponDTO;
 
 import java.util.List;
 
 public interface CouponService {
 
-    Coupon createCoupon(Coupon coupon);
+    CouponDTO createCoupon(CouponDTO couponDTO);
 
-    Coupon getCouponById(Long id);
+    CouponDTO getCouponById(Long id);
 
-    Coupon getCouponByCode(String code);
+    CouponDTO getCouponByCode(String code);
 
-    List<Coupon> getAllCoupons();
+    List<CouponDTO> getAllCoupons();
 
-    Coupon updateCoupon(Long id, Coupon coupon);
+    CouponDTO updateCoupon(Long id, CouponDTO couponDTO);
 
     void deleteCoupon(Long id);
 

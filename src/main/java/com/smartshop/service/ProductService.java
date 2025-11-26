@@ -1,18 +1,18 @@
 package com.smartshop.service;
 
-import com.smartshop.entity.Product;
+import com.smartshop.dto.ProductDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ProductService {
 
-    Product createProduct(Product product);
+    ProductDTO createProduct(ProductDTO productDTO);
 
-    Product getProductById(Long id);
+    ProductDTO getProductById(Long id);
 
-    Page<Product> getAllProducts(Pageable pageable);
+    Page<ProductDTO> getAllProducts(Pageable pageable);
 
-    Product updateProduct(Long id, Product product);
+    ProductDTO updateProduct(Long id, ProductDTO productDTO);
 
     void deleteProduct(Long id);
 }

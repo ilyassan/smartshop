@@ -1,11 +1,12 @@
 package com.smartshop.controller;
 
-import com.smartshop.entity.Order;
-import com.smartshop.entity.Payment;
+import com.smartshop.dto.OrderDTO;
+import com.smartshop.dto.PaymentDTO;
 import com.smartshop.exception.UnauthorizedException;
 import com.smartshop.service.OrderService;
 import com.smartshop.service.PaymentService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,32 +26,32 @@ public class PaymentController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<Payment> createPayment(@RequestBody Payment payment, HttpSession session) {
+    public ResponseEntity<PaymentDTO> createPayment(@Valid @RequestBody PaymentDTO payment, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
         if (loggedInUserId == null) {
             throw new UnauthorizedException("Please login first");
         }
 
-        Order order = orderService.getOrderById(payment.getOrderId());
+        OrderDTO orderDTO = orderService.getOrderById(payment.getOrderId());
 
-        if (!order.getUserId().equals(loggedInUserId)) {
+        if (!orderDTO.getUserId().equals(loggedInUserId)) {
             throw new UnauthorizedException("You can only create payments for your own orders");
         }
 
         log.info("Creating payment for order: {}", payment.getOrderId());
-        Payment createdPayment = paymentService.createPayment(payment);
+        PaymentDTO createdPayment = paymentService.createPayment(payment);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPayment);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Payment> getPaymentById(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable Long id, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
         if (loggedInUserId == null) {
             throw new UnauthorizedException("Please login first");
         }
 
-        Payment payment = paymentService.getPaymentById(id);
-        Order order = orderService.getOrderById(payment.getOrderId());
+        PaymentDTO payment = paymentService.getPaymentById(id);
+        OrderDTO order = orderService.getOrderById(payment.getOrderId());
 
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId))) {
@@ -62,13 +63,13 @@ public class PaymentController {
     }
 
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<Payment>> getPaymentsByOrderId(@PathVariable Long orderId, HttpSession session) {
+    public ResponseEntity<List<PaymentDTO>> getPaymentsByOrderId(@PathVariable Long orderId, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
         if (loggedInUserId == null) {
             throw new UnauthorizedException("Please login first");
         }
 
-        Order order = orderService.getOrderById(orderId);
+        OrderDTO order = orderService.getOrderById(orderId);
 
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId))) {
@@ -76,31 +77,31 @@ public class PaymentController {
         }
 
         log.info("Fetching payments for order: {}", orderId);
-        List<Payment> payments = paymentService.getPaymentsByOrderId(orderId);
+        List<PaymentDTO> payments = paymentService.getPaymentsByOrderId(orderId);
         return ResponseEntity.ok(payments);
     }
 
     @GetMapping
-    public ResponseEntity<List<Payment>> getAllPayments(HttpSession session) {
+    public ResponseEntity<List<PaymentDTO>> getAllPayments(HttpSession session) {
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || !userRole.equals("ADMIN")) {
             throw new UnauthorizedException("Only admins can view all payments");
         }
 
         log.info("Fetching all payments");
-        List<Payment> payments = paymentService.getAllPayments();
+        List<PaymentDTO> payments = paymentService.getAllPayments();
         return ResponseEntity.ok(payments);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Payment> updatePayment(@PathVariable Long id, @RequestBody Payment payment, HttpSession session) {
+    public ResponseEntity<PaymentDTO> updatePayment(@PathVariable Long id, @Valid @RequestBody PaymentDTO payment, HttpSession session) {
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || !userRole.equals("ADMIN")) {
             throw new UnauthorizedException("Only admins can update payments");
         }
 
         log.info("Updating payment with id: {}", id);
-        Payment updatedPayment = paymentService.updatePayment(id, payment);
+        PaymentDTO updatedPayment = paymentService.updatePayment(id, payment);
         return ResponseEntity.ok(updatedPayment);
     }
 

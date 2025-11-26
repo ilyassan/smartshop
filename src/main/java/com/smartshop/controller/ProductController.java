@@ -1,6 +1,6 @@
 package com.smartshop.controller;
 
-import com.smartshop.entity.Product;
+import com.smartshop.dto.ProductDTO;
 import com.smartshop.exception.UnauthorizedException;
 import com.smartshop.service.ProductService;
 import jakarta.servlet.http.HttpSession;
@@ -22,24 +22,24 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product, HttpSession session) {
+    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO product, HttpSession session) {
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || !userRole.equals("ADMIN")) {
             throw new UnauthorizedException("Only admins can create products");
         }
 
-        Product createdProduct = productService.createProduct(product);
+        ProductDTO createdProduct = productService.createProduct(product);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Product product = productService.getProductById(id);
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+        ProductDTO product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
     @GetMapping
-    public ResponseEntity<Page<Product>> getAllProducts(
+    public ResponseEntity<Page<ProductDTO>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -48,21 +48,21 @@ public class ProductController {
         Sort.Direction direction = sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
-        Page<Product> products = productService.getAllProducts(pageable);
+        Page<ProductDTO> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(products);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<ProductDTO> updateProduct(
             @PathVariable Long id,
-            @RequestBody Product product,
+            @Valid @RequestBody ProductDTO product,
             HttpSession session) {
         String userRole = (String) session.getAttribute("userRole");
         if (userRole == null || !userRole.equals("ADMIN")) {
             throw new UnauthorizedException("Only admins can update products");
         }
 
-        Product updatedProduct = productService.updateProduct(id, product);
+        ProductDTO updatedProduct = productService.updateProduct(id, product);
         return ResponseEntity.ok(updatedProduct);
     }
 
