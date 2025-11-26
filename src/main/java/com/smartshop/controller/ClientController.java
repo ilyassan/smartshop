@@ -1,5 +1,6 @@
 package com.smartshop.controller;
 
+import com.smartshop.dto.ClientStatistics;
 import com.smartshop.entity.User;
 import com.smartshop.exception.UnauthorizedException;
 import com.smartshop.service.ClientService;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/clients")
+@RequestMapping("/clients")
 @RequiredArgsConstructor
 @Slf4j
 public class ClientController {
@@ -84,5 +85,22 @@ public class ClientController {
         log.info("Deleting client with id: {}", id);
         clientService.deleteClient(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/statistics")
+    public ResponseEntity<ClientStatistics> getClientStatistics(@PathVariable Long id, HttpSession session) {
+        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        if (loggedInUserId == null) {
+            throw new UnauthorizedException("Please login first");
+        }
+
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null || (!userRole.equals("ADMIN") && !loggedInUserId.equals(id))) {
+            throw new UnauthorizedException("You can only view your own statistics");
+        }
+
+        log.info("Fetching statistics for client with id: {}", id);
+        ClientStatistics statistics = clientService.getClientStatistics(id);
+        return ResponseEntity.ok(statistics);
     }
 }

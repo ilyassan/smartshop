@@ -1,9 +1,15 @@
 package com.smartshop.service.impl;
 
+import com.smartshop.dto.ClientStatistics;
+import com.smartshop.entity.Order;
+import com.smartshop.entity.Payment;
 import com.smartshop.entity.User;
 import com.smartshop.enums.CustomerTier;
+import com.smartshop.enums.OrderStatus;
 import com.smartshop.enums.UserRole;
 import com.smartshop.exception.ResourceNotFoundException;
+import com.smartshop.repository.OrderRepository;
+import com.smartshop.repository.PaymentRepository;
 import com.smartshop.repository.UserRepository;
 import com.smartshop.service.ClientService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +18,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +31,8 @@ public class ClientServiceImpl implements ClientService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
 
     @Override
     public User createClient(User user) {
@@ -94,5 +105,75 @@ public class ClientServiceImpl implements ClientService {
 
         userRepository.delete(client);
         log.info("Deleted client with id: {}", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClientStatistics getClientStatistics(Long clientId) {
+        User client = userRepository.findByIdAndRole(clientId, UserRole.CLIENT)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
+
+        List<Order> allOrders = orderRepository.findByUserId(clientId);
+
+        Integer totalOrders = allOrders.size();
+        BigDecimal totalSpent = calculateTotalSpent(clientId);
+        BigDecimal totalRemaining = allOrders.stream()
+                .map(Order::getRemainingAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        LocalDateTime firstOrderDate = allOrders.stream()
+                .map(Order::getOrderDate)
+                .min(Comparator.naturalOrder())
+                .orElse(null);
+
+        LocalDateTime lastOrderDate = allOrders.stream()
+                .map(Order::getOrderDate)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+
+        Map<OrderStatus, Integer> ordersByStatus = allOrders.stream()
+                .collect(Collectors.groupingBy(
+                        Order::getStatus,
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+                ));
+
+        List<ClientStatistics.OrderSummary> recentOrders = allOrders.stream()
+                .sorted(Comparator.comparing(Order::getOrderDate).reversed())
+                .limit(10)
+                .map(order -> ClientStatistics.OrderSummary.builder()
+                        .orderId(order.getId())
+                        .orderDate(order.getOrderDate())
+                        .totalTTC(order.getTotalTTC())
+                        .status(order.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ClientStatistics.builder()
+                .clientId(client.getId())
+                .clientName(client.getName())
+                .email(client.getEmail())
+                .loyaltyTier(client.getLoyaltyTier())
+                .totalOrders(totalOrders)
+                .totalSpent(totalSpent)
+                .totalRemaining(totalRemaining)
+                .firstOrderDate(firstOrderDate)
+                .lastOrderDate(lastOrderDate)
+                .ordersByStatus(ordersByStatus)
+                .recentOrders(recentOrders)
+                .build();
+    }
+
+    private BigDecimal calculateTotalSpent(Long userId) {
+        List<Order> allOrders = orderRepository.findByUserId(userId);
+        BigDecimal totalSpending = BigDecimal.ZERO;
+
+        for (Order order : allOrders) {
+            List<Payment> payments = paymentRepository.findByOrderId(order.getId());
+            for (Payment payment : payments) {
+                totalSpending = totalSpending.add(payment.getAmount());
+            }
+        }
+
+        return totalSpending;
     }
 }

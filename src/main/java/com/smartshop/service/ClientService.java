@@ -1,5 +1,6 @@
 package com.smartshop.service;
 
+import com.smartshop.dto.ClientStatistics;
 import com.smartshop.entity.User;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public interface ClientService {
     User updateClient(Long id, User user);
 
     void deleteClient(Long id);
+
+    ClientStatistics getClientStatistics(Long clientId);
 }
