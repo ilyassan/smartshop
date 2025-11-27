@@ -1,0 +1,1123 @@
+{
+	"info": {
+		"_postman_id": "smartshop-api-collection",
+		"name": "SmartShop API - Complete Collection",
+		"description": "Complete API collection for SmartShop application with all endpoints and test data.\n\n**Base URL:** http://localhost:8080/api\n\n**Authentication:** Session-based (Cookie: SMARTSHOP_SESSION)\n\n**Seeded Users:**\n- Admin: username=admin, password=admin123\n- Client: username=client1, password=client123\n\n**Loyalty Tiers:**\n- BASIC: Default tier\n- SILVER: 5000+ spent & 5+ confirmed orders\n- GOLD: 15000+ spent & 15+ confirmed orders\n- PLATINUM: 30000+ spent & 30+ confirmed orders",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login as Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login successful\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.role).to.eql(\"ADMIN\");",
+									"    pm.environment.set(\"userId\", jsonData.id);",
+									"    pm.environment.set(\"userRole\", jsonData.role);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login as Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login successful\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.role).to.eql(\"CLIENT\");",
+									"    pm.environment.set(\"userId\", jsonData.id);",
+									"    pm.environment.set(\"userRole\", jsonData.role);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"client1\",\n    \"password\": \"client123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "me"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Clients",
+			"item": [
+				{
+					"name": "Create Client (Registration)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Client created successfully\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.password).to.be.null;",
+									"    pm.environment.set(\"newClientId\", jsonData.id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoe\",\n    \"password\": \"SecurePass123!\",\n    \"role\": \"CLIENT\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phone\": \"+1-555-0123\",\n    \"address\": \"123 Main Street, New York, NY 10001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/clients",
+							"host": ["{{baseUrl}}"],
+							"path": ["clients"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Client by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clients/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["clients", "{{userId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Clients (Admin Only)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clients",
+							"host": ["{{baseUrl}}"],
+							"path": ["clients"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Client",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoe\",\n    \"role\": \"CLIENT\",\n    \"name\": \"John Doe Updated\",\n    \"email\": \"john.doe.updated@example.com\",\n    \"phone\": \"+1-555-9999\",\n    \"address\": \"456 Oak Avenue, Los Angeles, CA 90001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/clients/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["clients", "{{userId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Client (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clients/{{newClientId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["clients", "{{newClientId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Client Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/clients/{{userId}}/statistics",
+							"host": ["{{baseUrl}}"],
+							"path": ["clients", "{{userId}}", "statistics"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create Product (Admin Only)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Product created successfully\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"productId\", jsonData.id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Premium Wireless Headphones\",\n    \"sku\": \"AUDIO-WH-001\",\n    \"description\": \"High-quality wireless headphones with noise cancellation, 30-hour battery life, and premium sound quality.\",\n    \"unitPrice\": 299.99,\n    \"stock\": 50,\n    \"category\": \"Electronics\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Multiple Products",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// This will be run manually for each product"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Laptop Stand Pro\",\n    \"sku\": \"ACC-LS-002\",\n    \"description\": \"Ergonomic aluminum laptop stand with adjustable height and angle.\",\n    \"unitPrice\": 79.99,\n    \"stock\": 100,\n    \"category\": \"Accessories\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products?page=0&size=10&sortBy=name&sortDirection=ASC",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "name"
+								},
+								{
+									"key": "sortDirection",
+									"value": "ASC"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Premium Wireless Headphones Pro\",\n    \"sku\": \"AUDIO-WH-001\",\n    \"description\": \"High-quality wireless headphones with advanced noise cancellation, 40-hour battery life, and premium sound quality.\",\n    \"unitPrice\": 349.99,\n    \"stock\": 75,\n    \"category\": \"Electronics\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Coupons",
+			"item": [
+				{
+					"name": "Create Coupon (Admin Only)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Coupon created successfully\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"couponId\", jsonData.id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"SUMMER2025\",\n    \"discountPercentage\": 30.00,\n    \"isUsed\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/coupons",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Coupon by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/{{couponId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons", "{{couponId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Coupon by Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/code/WELCOME10",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons", "code", "WELCOME10"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Coupons (Admin Only)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Coupon (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"SUMMER2025\",\n    \"discountPercentage\": 35.00,\n    \"isUsed\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/coupons/{{couponId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons", "{{couponId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Coupon as Used (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/use/SUMMER2025",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons", "use", "SUMMER2025"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Coupon (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/{{couponId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons", "{{couponId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Create Order without Coupon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Order created successfully\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"orderId\", jsonData.id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{userId}},\n    \"items\": [\n        {\n            \"productId\": 1,\n            \"quantity\": 2\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Order with Coupon",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{userId}},\n    \"items\": [\n        {\n            \"productId\": 1,\n            \"quantity\": 1\n        },\n        {\n            \"productId\": 2,\n            \"quantity\": 3\n        }\n    ],\n    \"couponCode\": \"WELCOME10\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/{{orderId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "{{orderId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Orders by User ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/user/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "user", "{{userId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Orders (Admin Only)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Order (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/{{orderId}}/confirm",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "{{orderId}}", "confirm"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Order (Client)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "{{orderId}}", "cancel"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Create Payment - CASH",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Payment created successfully\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"paymentId\", jsonData.id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": {{orderId}},\n    \"amount\": 500.00,\n    \"paymentMethod\": \"CASH\",\n    \"paymentDate\": \"2025-11-26\",\n    \"reference\": \"CASH-2025-001\",\n    \"status\": \"COLLECTED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment - CHECK",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": {{orderId}},\n    \"amount\": 1000.00,\n    \"paymentMethod\": \"CHECK\",\n    \"paymentDate\": \"2025-11-26\",\n    \"collectionDate\": \"2025-12-05\",\n    \"reference\": \"CHK-2025-001\",\n    \"bankName\": \"Bank of America\",\n    \"dueDate\": \"2025-12-10\",\n    \"status\": \"PENDING\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment - TRANSFER",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": {{orderId}},\n    \"amount\": 900.00,\n    \"paymentMethod\": \"TRANSFER\",\n    \"paymentDate\": \"2025-11-26\",\n    \"reference\": \"TRF-2025-001\",\n    \"bankName\": \"Chase Bank\",\n    \"status\": \"COLLECTED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/{{paymentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "{{paymentId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payments by Order ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/order/{{orderId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "order", "{{orderId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Payments (Admin Only)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Payment (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": {{orderId}},\n    \"amount\": 500.00,\n    \"paymentMethod\": \"CASH\",\n    \"paymentDate\": \"2025-11-26\",\n    \"reference\": \"CASH-2025-001-UPDATED\",\n    \"status\": \"COLLECTED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/{{paymentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "{{paymentId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Payment (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/{{paymentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "{{paymentId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test Scenarios",
+			"item": [
+				{
+					"name": "Complete Order Flow",
+					"item": [
+						{
+							"name": "1. Login as Client",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"client1\",\n    \"password\": \"client123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/auth/login",
+									"host": ["{{baseUrl}}"],
+									"path": ["auth", "login"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Browse Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products?page=0&size=10",
+									"host": ["{{baseUrl}}"],
+									"path": ["products"],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Check Available Coupons",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/coupons/code/WELCOME10",
+									"host": ["{{baseUrl}}"],
+									"path": ["coupons", "code", "WELCOME10"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Create Order with Coupon",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"userId\": {{userId}},\n    \"items\": [\n        {\n            \"productId\": 1,\n            \"quantity\": 2\n        }\n    ],\n    \"couponCode\": \"WELCOME10\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. Make Partial Payment",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"orderId\": {{orderId}},\n    \"amount\": 500.00,\n    \"paymentMethod\": \"CASH\",\n    \"paymentDate\": \"2025-11-26\",\n    \"reference\": \"PARTIAL-001\",\n    \"status\": \"COLLECTED\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/payments",
+									"host": ["{{baseUrl}}"],
+									"path": ["payments"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "6. View Order Status",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/{{orderId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "{{orderId}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "7. View My Statistics",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/clients/{{userId}}/statistics",
+									"host": ["{{baseUrl}}"],
+									"path": ["clients", "{{userId}}", "statistics"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Admin Workflow",
+					"item": [
+						{
+							"name": "1. Login as Admin",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/auth/login",
+									"host": ["{{baseUrl}}"],
+									"path": ["auth", "login"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. View All Orders",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Confirm Order",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/{{orderId}}/confirm",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", "{{orderId}}", "confirm"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. View All Payments",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/payments",
+									"host": ["{{baseUrl}}"],
+									"path": ["payments"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. View All Clients",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/clients",
+									"host": ["{{baseUrl}}"],
+									"path": ["clients"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "6. Create New Product",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Mechanical Keyboard RGB\",\n    \"sku\": \"KB-RGB-003\",\n    \"description\": \"Gaming mechanical keyboard with RGB lighting and Cherry MX switches.\",\n    \"unitPrice\": 149.99,\n    \"stock\": 30,\n    \"category\": \"Peripherals\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/products",
+									"host": ["{{baseUrl}}"],
+									"path": ["products"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "7. Create Coupon",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\": \"BLACKFRIDAY\",\n    \"discountPercentage\": 50.00,\n    \"isUsed\": false\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/coupons",
+									"host": ["{{baseUrl}}"],
+									"path": ["coupons"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/api",
+			"type": "default"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "userRole",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "productId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "orderId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "couponId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "paymentId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "newClientId",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
