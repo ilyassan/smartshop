@@ -5,10 +5,10 @@ import com.smartshop.entity.User;
 import com.smartshop.enums.UserRole;
 import com.smartshop.repository.CouponRepository;
 import com.smartshop.repository.UserRepository;
+import com.smartshop.util.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

@@ -14,9 +14,9 @@ import com.smartshop.repository.OrderRepository;
 import com.smartshop.repository.PaymentRepository;
 import com.smartshop.repository.UserRepository;
 import com.smartshop.service.ClientService;
+import com.smartshop.util.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

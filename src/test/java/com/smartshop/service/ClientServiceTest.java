@@ -8,13 +8,13 @@ import com.smartshop.exception.ResourceNotFoundException;
 import com.smartshop.mapper.UserMapper;
 import com.smartshop.repository.UserRepository;
 import com.smartshop.service.impl.ClientServiceImpl;
+import com.smartshop.util.PasswordEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
