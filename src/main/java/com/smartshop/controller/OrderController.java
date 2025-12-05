@@ -25,13 +25,9 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody CreateOrderRequest request, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
-
-        if (!loggedInUserId.equals(request.userId)) {
-            throw new UnauthorizedException("You can only create orders for yourself");
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null || !userRole.equals("ADMIN")) {
+            throw new UnauthorizedException("Only admins can create orders");
         }
 
         OrderDTO order = orderService.createOrder(request.userId, request.items, request.couponCode);

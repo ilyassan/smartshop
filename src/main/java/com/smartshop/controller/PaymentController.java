@@ -27,16 +27,12 @@ public class PaymentController {
 
     @PostMapping
     public ResponseEntity<PaymentDTO> createPayment(@Valid @RequestBody PaymentDTO payment, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null || !userRole.equals("ADMIN")) {
+            throw new UnauthorizedException("Only admins can register payments");
         }
 
         OrderDTO orderDTO = orderService.getOrderById(payment.getOrderId());
-
-        if (!orderDTO.getUserId().equals(loggedInUserId)) {
-            throw new UnauthorizedException("You can only create payments for your own orders");
-        }
 
         log.info("Creating payment for order: {}", payment.getOrderId());
         PaymentDTO createdPayment = paymentService.createPayment(payment);

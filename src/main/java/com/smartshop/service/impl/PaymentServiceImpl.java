@@ -3,6 +3,7 @@ package com.smartshop.service.impl;
 import com.smartshop.dto.PaymentDTO;
 import com.smartshop.entity.*;
 import com.smartshop.enums.OrderStatus;
+import com.smartshop.enums.PaymentMethod;
 import com.smartshop.exception.ResourceNotFoundException;
 import com.smartshop.mapper.PaymentMapper;
 import com.smartshop.repository.*;
@@ -30,6 +31,9 @@ public class PaymentServiceImpl implements PaymentService {
     private final LoyaltyTierService loyaltyTierService;
     private final PaymentMapper paymentMapper;
 
+    // Maximum payment limit for CASH payments (Article 193 CGI - Morocco)
+    private static final BigDecimal CASH_PAYMENT_LIMIT = new BigDecimal("20000");
+
     @Override
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
         // Convert DTO to entity
@@ -38,6 +42,12 @@ public class PaymentServiceImpl implements PaymentService {
         // Get the order
         Order order = orderRepository.findById(payment.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + payment.getOrderId()));
+
+        // Validate cash payment limit (Art. 193 CGI)
+        if (PaymentMethod.CASH.equals(payment.getPaymentMethod()) &&
+                payment.getAmount().compareTo(CASH_PAYMENT_LIMIT) > 0) {
+            throw new IllegalArgumentException("Cash payment cannot exceed " + CASH_PAYMENT_LIMIT + " DH (Article 193 CGI)");
+        }
 
         // Validate payment amount doesn't exceed remaining amount
         if (payment.getAmount().compareTo(order.getRemainingAmount()) > 0) {

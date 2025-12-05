@@ -47,7 +47,7 @@ class CouponControllerIntegrationTest extends BaseIntegrationTest {
         adminUser = userRepository.save(adminUser);
 
         testCoupon = Coupon.builder()
-                .code("TEST10")
+                .code("PROMO-TEST")
                 .discountPercentage(new BigDecimal("10.00"))
                 .isUsed(false)
                 .build();
@@ -61,7 +61,7 @@ class CouponControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void createCoupon_Success() throws Exception {
         CouponDTO newCoupon = CouponDTO.builder()
-                .code("SAVE20")
+                .code("PROMO-SV20")
                 .discountPercentage(new BigDecimal("20.00"))
                 .isUsed(false)
                 .build();
@@ -71,7 +71,7 @@ class CouponControllerIntegrationTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newCoupon)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.code", is("SAVE20")))
+                .andExpect(jsonPath("$.code", is("PROMO-SV20")))
                 .andExpect(jsonPath("$.discountPercentage", is(20.00)))
                 .andExpect(jsonPath("$.isUsed", is(false)));
     }
@@ -79,7 +79,7 @@ class CouponControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void createCoupon_DuplicateCode_BadRequest() throws Exception {
         CouponDTO newCoupon = CouponDTO.builder()
-                .code("TEST10")
+                .code("PROMO-TEST")
                 .discountPercentage(new BigDecimal("15.00"))
                 .build();
 
@@ -96,7 +96,7 @@ class CouponControllerIntegrationTest extends BaseIntegrationTest {
                         .session(adminSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(testCoupon.getId().intValue())))
-                .andExpect(jsonPath("$.code", is("TEST10")))
+                .andExpect(jsonPath("$.code", is("PROMO-TEST")))
                 .andExpect(jsonPath("$.discountPercentage", is(10.00)));
     }
 
@@ -109,9 +109,9 @@ class CouponControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void getCouponByCode_Success() throws Exception {
-        mockMvc.perform(get("/coupons/code/TEST10"))
+        mockMvc.perform(get("/coupons/code/PROMO-TEST"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is("TEST10")))
+                .andExpect(jsonPath("$.code", is("PROMO-TEST")))
                 .andExpect(jsonPath("$.discountPercentage", is(10.00)));
     }
 
@@ -132,7 +132,7 @@ class CouponControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void updateCoupon_Success() throws Exception {
         CouponDTO updateDTO = CouponDTO.builder()
-                .code("TEST10")
+                .code("PROMO-TEST")
                 .discountPercentage(new BigDecimal("15.00"))
                 .isUsed(false)
                 .build();
