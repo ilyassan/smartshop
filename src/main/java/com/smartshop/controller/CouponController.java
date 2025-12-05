@@ -1,9 +1,8 @@
 package com.smartshop.controller;
 
+import com.smartshop.annotation.RequireRole;
 import com.smartshop.dto.CouponDTO;
-import com.smartshop.exception.UnauthorizedException;
 import com.smartshop.service.CouponService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,12 +19,8 @@ public class CouponController {
     private final CouponService couponService;
 
     @PostMapping
-    public ResponseEntity<CouponDTO> createCoupon(@Valid @RequestBody CouponDTO coupon, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can create coupons");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<CouponDTO> createCoupon(@Valid @RequestBody CouponDTO coupon) {
         CouponDTO createdCoupon = couponService.createCoupon(coupon);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCoupon);
     }
@@ -43,48 +38,31 @@ public class CouponController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CouponDTO>> getAllCoupons(HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can view all coupons");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<List<CouponDTO>> getAllCoupons() {
         List<CouponDTO> coupons = couponService.getAllCoupons();
         return ResponseEntity.ok(coupons);
     }
 
     @PutMapping("/{id}")
+    @RequireRole("ADMIN")
     public ResponseEntity<CouponDTO> updateCoupon(
             @PathVariable Long id,
-            @Valid @RequestBody CouponDTO coupon,
-            HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can update coupons");
-        }
-
+            @Valid @RequestBody CouponDTO coupon) {
         CouponDTO updatedCoupon = couponService.updateCoupon(id, coupon);
         return ResponseEntity.ok(updatedCoupon);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCoupon(@PathVariable Long id, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can delete coupons");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<Void> deleteCoupon(@PathVariable Long id) {
         couponService.deleteCoupon(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/use/{code}")
-    public ResponseEntity<Void> useCoupon(@PathVariable String code, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can manually mark coupons as used");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<Void> useCoupon(@PathVariable String code) {
         couponService.useCoupon(code);
         return ResponseEntity.noContent().build();
     }

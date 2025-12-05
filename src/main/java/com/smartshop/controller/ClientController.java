@@ -1,5 +1,7 @@
 package com.smartshop.controller;
 
+import com.smartshop.annotation.RequireAuth;
+import com.smartshop.annotation.RequireRole;
 import com.smartshop.dto.ClientStatistics;
 import com.smartshop.dto.UserDTO;
 import com.smartshop.exception.UnauthorizedException;
@@ -31,14 +33,12 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
+    @RequireAuth
     public ResponseEntity<UserDTO> getClientById(@PathVariable Long id, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
-
         String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || (!userRole.equals("ADMIN") && !loggedInUserId.equals(id))) {
+
+        if (!userRole.equals("ADMIN") && !loggedInUserId.equals(id)) {
             throw new UnauthorizedException("You can only view your own profile");
         }
 
@@ -48,26 +48,20 @@ public class ClientController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAllClients(HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can view all clients");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<List<UserDTO>> getAllClients() {
         log.info("Fetching all clients");
         List<UserDTO> clients = clientService.getAllClients();
         return ResponseEntity.ok(clients);
     }
 
     @PutMapping("/{id}")
+    @RequireAuth
     public ResponseEntity<UserDTO> updateClient(@PathVariable Long id, @Valid @RequestBody UserDTO user, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
-
         String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || (!userRole.equals("ADMIN") && !loggedInUserId.equals(id))) {
+
+        if (!userRole.equals("ADMIN") && !loggedInUserId.equals(id)) {
             throw new UnauthorizedException("You can only update your own profile");
         }
 
@@ -77,26 +71,20 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClient(@PathVariable Long id, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can delete clients");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         log.info("Deleting client with id: {}", id);
         clientService.deleteClient(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/statistics")
+    @RequireAuth
     public ResponseEntity<ClientStatistics> getClientStatistics(@PathVariable Long id, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
-
         String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || (!userRole.equals("ADMIN") && !loggedInUserId.equals(id))) {
+
+        if (!userRole.equals("ADMIN") && !loggedInUserId.equals(id)) {
             throw new UnauthorizedException("You can only view your own statistics");
         }
 

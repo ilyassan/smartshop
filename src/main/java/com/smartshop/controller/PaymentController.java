@@ -1,5 +1,7 @@
 package com.smartshop.controller;
 
+import com.smartshop.annotation.RequireAuth;
+import com.smartshop.annotation.RequireRole;
 import com.smartshop.dto.OrderDTO;
 import com.smartshop.dto.PaymentDTO;
 import com.smartshop.exception.UnauthorizedException;
@@ -26,12 +28,8 @@ public class PaymentController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<PaymentDTO> createPayment(@Valid @RequestBody PaymentDTO payment, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can register payments");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<PaymentDTO> createPayment(@Valid @RequestBody PaymentDTO payment) {
         OrderDTO orderDTO = orderService.getOrderById(payment.getOrderId());
 
         log.info("Creating payment for order: {}", payment.getOrderId());
@@ -40,17 +38,15 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
+    @RequireAuth
     public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable Long id, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
 
         PaymentDTO payment = paymentService.getPaymentById(id);
         OrderDTO order = orderService.getOrderById(payment.getOrderId());
 
         String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId))) {
+        if (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId)) {
             throw new UnauthorizedException("You can only view payments for your own orders");
         }
 
@@ -59,16 +55,14 @@ public class PaymentController {
     }
 
     @GetMapping("/order/{orderId}")
+    @RequireAuth
     public ResponseEntity<List<PaymentDTO>> getPaymentsByOrderId(@PathVariable Long orderId, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
 
         OrderDTO order = orderService.getOrderById(orderId);
 
         String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId))) {
+        if (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId)) {
             throw new UnauthorizedException("You can only view payments for your own orders");
         }
 
@@ -78,36 +72,24 @@ public class PaymentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PaymentDTO>> getAllPayments(HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can view all payments");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<List<PaymentDTO>> getAllPayments() {
         log.info("Fetching all payments");
         List<PaymentDTO> payments = paymentService.getAllPayments();
         return ResponseEntity.ok(payments);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PaymentDTO> updatePayment(@PathVariable Long id, @Valid @RequestBody PaymentDTO payment, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can update payments");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<PaymentDTO> updatePayment(@PathVariable Long id, @Valid @RequestBody PaymentDTO payment) {
         log.info("Updating payment with id: {}", id);
         PaymentDTO updatedPayment = paymentService.updatePayment(id, payment);
         return ResponseEntity.ok(updatedPayment);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePayment(@PathVariable Long id, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can delete payments");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<Void> deletePayment(@PathVariable Long id) {
         log.info("Deleting payment with id: {}", id);
         paymentService.deletePayment(id);
         return ResponseEntity.noContent().build();

@@ -1,5 +1,6 @@
 package com.smartshop.controller;
 
+import com.smartshop.annotation.RequireAuth;
 import com.smartshop.dto.AuthResponse;
 import com.smartshop.dto.LoginRequest;
 import com.smartshop.service.AuthService;
@@ -39,6 +40,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @RequireAuth
     @Operation(summary = "Get current user", description = "Get currently authenticated user information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User information retrieved"),
@@ -50,6 +52,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @RequireAuth
     @Operation(summary = "User logout", description = "Logout user and invalidate session")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Logout successful")

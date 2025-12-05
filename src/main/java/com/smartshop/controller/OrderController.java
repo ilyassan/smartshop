@@ -1,5 +1,7 @@
 package com.smartshop.controller;
 
+import com.smartshop.annotation.RequireAuth;
+import com.smartshop.annotation.RequireRole;
 import com.smartshop.dto.OrderDTO;
 import com.smartshop.enums.UserRole;
 import com.smartshop.exception.UnauthorizedException;
@@ -24,27 +26,21 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody CreateOrderRequest request, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can create orders");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         OrderDTO order = orderService.createOrder(request.userId, request.items, request.couponCode);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 
     @GetMapping("/{id}")
+    @RequireAuth
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
 
         OrderDTO order = orderService.getOrderById(id);
 
         String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId))) {
+        if (!userRole.equals("ADMIN") && !order.getUserId().equals(loggedInUserId)) {
             throw new UnauthorizedException("You can only view your own orders");
         }
 
@@ -52,14 +48,12 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
+    @RequireAuth
     public ResponseEntity<List<OrderDTO>> getOrdersByUserId(@PathVariable Long userId, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
 
         String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || (!userRole.equals("ADMIN") && !loggedInUserId.equals(userId))) {
+        if (!userRole.equals("ADMIN") && !loggedInUserId.equals(userId)) {
             throw new UnauthorizedException("You can only view your own orders");
         }
 
@@ -68,33 +62,23 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderDTO>> getAllOrders(HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can view all orders");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<List<OrderDTO>> getAllOrders() {
         List<OrderDTO> orders = orderService.getAllOrders();
         return ResponseEntity.ok(orders);
     }
 
     @PutMapping("/{id}/confirm")
-    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable Long id, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equals("ADMIN")) {
-            throw new UnauthorizedException("Only admins can confirm orders");
-        }
-
+    @RequireRole("ADMIN")
+    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable Long id) {
         OrderDTO confirmedOrder = orderService.confirmOrder(id);
         return ResponseEntity.ok(confirmedOrder);
     }
 
     @PutMapping("/{id}/cancel")
+    @RequireAuth
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id, HttpSession session) {
         Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
-        if (loggedInUserId == null) {
-            throw new UnauthorizedException("Please login first");
-        }
 
         OrderDTO order = orderService.getOrderById(id);
 
