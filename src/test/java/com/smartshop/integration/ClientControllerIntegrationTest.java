@@ -177,4 +177,41 @@ class ClientControllerIntegrationTest extends BaseIntegrationTest {
                         .session(clientSession))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void getClientStatistics_AsAdmin_Success() throws Exception {
+        mockMvc.perform(get("/clients/" + clientUser.getId() + "/statistics")
+                        .session(adminSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clientId", is(clientUser.getId().intValue())))
+                .andExpect(jsonPath("$.clientName", is("Client User")))
+                .andExpect(jsonPath("$.email", is("client@example.com")))
+                .andExpect(jsonPath("$.loyaltyTier", is("BASIC")))
+                .andExpect(jsonPath("$.totalOrders", is(notNullValue())))
+                .andExpect(jsonPath("$.totalSpent", is(notNullValue())))
+                .andExpect(jsonPath("$.totalRemaining", is(notNullValue())));
+    }
+
+    @Test
+    void getClientStatistics_AsOwnProfile_Success() throws Exception {
+        mockMvc.perform(get("/clients/" + clientUser.getId() + "/statistics")
+                        .session(clientSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clientId", is(clientUser.getId().intValue())))
+                .andExpect(jsonPath("$.email", is("client@example.com")))
+                .andExpect(jsonPath("$.loyaltyTier", is("BASIC")));
+    }
+
+    @Test
+    void getClientStatistics_AsOtherClient_Unauthorized() throws Exception {
+        mockMvc.perform(get("/clients/" + adminUser.getId() + "/statistics")
+                        .session(clientSession))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getClientStatistics_NotLoggedIn_Unauthorized() throws Exception {
+        mockMvc.perform(get("/clients/" + clientUser.getId() + "/statistics"))
+                .andExpect(status().isUnauthorized());
+    }
 }

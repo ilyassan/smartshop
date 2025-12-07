@@ -196,4 +196,100 @@ class CouponServiceTest {
         verify(couponRepository, never()).delete(any(Coupon.class));
     }
 
+    // Test: useCoupon - Successful coupon deletion
+    @Test
+    void useCoupon_Success() {
+        when(couponRepository.findByCode("TEST10")).thenReturn(Optional.of(coupon));
+        doNothing().when(couponRepository).delete(coupon);
+
+        couponService.useCoupon("TEST10");
+
+        verify(couponRepository).findByCode("TEST10");
+        verify(couponRepository).delete(coupon);
+    }
+
+    // Test: useCoupon - Coupon not found (lambda exception coverage)
+    @Test
+    void useCoupon_CouponNotFound_ThrowsException() {
+        when(couponRepository.findByCode("INVALID")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            couponService.useCoupon("INVALID");
+        });
+        verify(couponRepository).findByCode("INVALID");
+        verify(couponRepository, never()).delete(any(Coupon.class));
+    }
+
+    // Test: useCoupon - Deletes the correct coupon with exact code match
+    @Test
+    void useCoupon_DeletesCorrectCoupon() {
+        Coupon coupon2 = Coupon.builder()
+                .id(2L)
+                .code("PROMO20")
+                .discountPercentage(new BigDecimal("20.00"))
+                .isUsed(false)
+                .build();
+
+        when(couponRepository.findByCode("PROMO20")).thenReturn(Optional.of(coupon2));
+        doNothing().when(couponRepository).delete(coupon2);
+
+        couponService.useCoupon("PROMO20");
+
+        verify(couponRepository).findByCode("PROMO20");
+        verify(couponRepository).delete(coupon2);
+        // Verify it's called exactly once (not multiple times)
+        verify(couponRepository, times(1)).delete(coupon2);
+    }
+
+    // Test: useCoupon - Case sensitive code lookup
+    @Test
+    void useCoupon_CaseSensitiveCodeLookup() {
+        when(couponRepository.findByCode("test10")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            couponService.useCoupon("test10"); // lowercase should not match "TEST10"
+        });
+        verify(couponRepository).findByCode("test10");
+        verify(couponRepository, never()).delete(any(Coupon.class));
+    }
+
+    // Test: useCoupon - Already used coupon can still be deleted
+    @Test
+    void useCoupon_AlreadyUsedCoupon() {
+        Coupon usedCoupon = Coupon.builder()
+                .id(1L)
+                .code("TEST10")
+                .discountPercentage(new BigDecimal("10.00"))
+                .isUsed(true) // Already marked as used
+                .build();
+
+        when(couponRepository.findByCode("TEST10")).thenReturn(Optional.of(usedCoupon));
+        doNothing().when(couponRepository).delete(usedCoupon);
+
+        couponService.useCoupon("TEST10");
+
+        // Verify deletion still happens for already-used coupons
+        verify(couponRepository).findByCode("TEST10");
+        verify(couponRepository).delete(usedCoupon);
+    }
+
+    // Test: useCoupon - Special characters in coupon code
+    @Test
+    void useCoupon_SpecialCharactersInCode() {
+        Coupon specialCoupon = Coupon.builder()
+                .id(3L)
+                .code("PROMO-SUMMER-2024")
+                .discountPercentage(new BigDecimal("25.00"))
+                .isUsed(false)
+                .build();
+
+        when(couponRepository.findByCode("PROMO-SUMMER-2024")).thenReturn(Optional.of(specialCoupon));
+        doNothing().when(couponRepository).delete(specialCoupon);
+
+        couponService.useCoupon("PROMO-SUMMER-2024");
+
+        verify(couponRepository).findByCode("PROMO-SUMMER-2024");
+        verify(couponRepository).delete(specialCoupon);
+    }
+
 }
