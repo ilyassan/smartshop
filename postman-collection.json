@@ -1,13 +1,14 @@
 {
   "info": {
-    "name": "SmartShop API",
-    "description": "Complete API collection for SmartShop - E-commerce platform with authentication, orders, payments, and loyalty system",
-    "version": "1.0.0",
+    "name": "SmartShop API - Complete Collection",
+    "description": "Comprehensive API collection for SmartShop B2B Platform with all endpoints, proper validation, and authentication. Includes 29 endpoints across 6 resource controllers.",
+    "version": "2.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Authentication",
+      "name": "1. Authentication",
+      "description": "User authentication endpoints - login, logout, and session management",
       "item": [
         {
           "name": "Login (Admin)",
@@ -28,7 +29,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "login"]
             },
-            "description": "Login as Admin user and create session"
+            "description": "Login as Admin user. Creates HTTP session with userId and userRole.\nResponse: AuthResponse with id, username, role, message"
           },
           "response": []
         },
@@ -51,7 +52,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "login"]
             },
-            "description": "Login as Client user and create session"
+            "description": "Login as Client user. Creates HTTP session with userId and userRole.\nResponse: AuthResponse with id, username, role, message"
           },
           "response": []
         },
@@ -65,7 +66,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "me"]
             },
-            "description": "Retrieve current authenticated user information"
+            "description": "Retrieve current authenticated user information.\nRequires: @RequireAuth (valid session)\nResponse: AuthResponse"
           },
           "response": []
         },
@@ -79,17 +80,18 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "logout"]
             },
-            "description": "Logout current user and invalidate session"
+            "description": "Logout current user and invalidate HTTP session.\nRequires: @RequireAuth\nResponse: Success message"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Clients",
+      "name": "2. Clients (Users)",
+      "description": "Client/User management endpoints - registration, profile, statistics",
       "item": [
         {
-          "name": "Register New Client",
+          "name": "Register New Client (Signup)",
           "request": {
             "method": "POST",
             "header": [
@@ -100,14 +102,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"newclient\",\n  \"password\": \"password123\",\n  \"email\": \"newclient@example.com\",\n  \"name\": \"New Client\",\n  \"phone\": \"1234567890\",\n  \"role\": \"CLIENT\"\n}"
+              "raw": "{\n  \"username\": \"newclient\",\n  \"password\": \"password123\",\n  \"role\": \"CLIENT\",\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+1234567890\",\n  \"address\": \"123 Main St, City\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/clients",
               "host": ["{{baseUrl}}"],
               "path": ["clients"]
             },
-            "description": "Register a new client (public endpoint)"
+            "description": "Register new client (public endpoint - no auth required).\nRequired fields: username, role\nOptional: name, email (validated format), phone, address\nNote: Role forced to CLIENT, loyaltyTier defaults to BASIC\nResponse: UserDTO (password not included)"
           },
           "response": []
         },
@@ -121,12 +123,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["clients", "1"]
             },
-            "description": "Get client profile (requires authentication, client can only view own profile)"
+            "description": "Get client by ID. Client can only view their own profile, Admin can view any.\nRequires: @RequireAuth\nAuthorization: Checks if user is viewing their own profile or is ADMIN\nResponse: UserDTO"
           },
           "response": []
         },
         {
-          "name": "Get All Clients",
+          "name": "Get All Clients (Admin)",
           "request": {
             "method": "GET",
             "header": [],
@@ -135,12 +137,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["clients"]
             },
-            "description": "List all clients (ADMIN only)"
+            "description": "Get list of all clients.\nRequires: @RequireRole(ADMIN)\nResponse: List<UserDTO>"
           },
           "response": []
         },
         {
-          "name": "Update Client",
+          "name": "Update Client Profile",
           "request": {
             "method": "PUT",
             "header": [
@@ -151,19 +153,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"newclient\",\n  \"email\": \"updated@example.com\",\n  \"name\": \"Updated Name\",\n  \"phone\": \"9876543210\",\n  \"role\": \"CLIENT\"\n}"
+              "raw": "{\n  \"username\": \"client1\",\n  \"role\": \"CLIENT\",\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"+9876543210\",\n  \"address\": \"456 New St, Updated City\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/clients/1",
               "host": ["{{baseUrl}}"],
               "path": ["clients", "1"]
             },
-            "description": "Update client profile (authenticated users can update own, ADMIN can update any)"
+            "description": "Update client profile. Client can only update their own, Admin can update any.\nRequires: @RequireAuth\nRequired fields: username, role\nOptional: name, email (validated), phone, address\nResponse: UserDTO"
           },
           "response": []
         },
         {
-          "name": "Delete Client",
+          "name": "Delete Client (Admin)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -172,7 +174,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["clients", "1"]
             },
-            "description": "Delete client (ADMIN only)"
+            "description": "Delete client permanently.\nRequires: @RequireRole(ADMIN)\nResponse: 204 No Content"
           },
           "response": []
         },
@@ -186,17 +188,18 @@
               "host": ["{{baseUrl}}"],
               "path": ["clients", "1", "statistics"]
             },
-            "description": "Get client statistics (orders, spending, loyalty tier, etc.)"
+            "description": "Get comprehensive client statistics including orders, spending, loyalty tier.\nRequires: @RequireAuth (client can view own, admin can view any)\nResponse: ClientStatistics with totalOrders, totalSpent, ordersByStatus, recentOrders"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Products",
+      "name": "3. Products",
+      "description": "Product catalog management - CRUD operations with pagination",
       "item": [
         {
-          "name": "Create Product",
+          "name": "Create Product (Admin)",
           "request": {
             "method": "POST",
             "header": [
@@ -207,14 +210,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Laptop\",\n  \"sku\": \"LAPTOP-001\",\n  \"unitPrice\": 999.99,\n  \"stock\": 50,\n  \"description\": \"High-performance laptop\"\n}"
+              "raw": "{\n  \"name\": \"Premium Widget\",\n  \"sku\": \"WIDGET-001\",\n  \"description\": \"High quality widget for all your needs\",\n  \"unitPrice\": 99.99,\n  \"stock\": 100,\n  \"category\": \"Electronics\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/products",
               "host": ["{{baseUrl}}"],
               "path": ["products"]
             },
-            "description": "Create new product (ADMIN only)"
+            "description": "Create new product.\nRequires: @RequireRole(ADMIN)\nRequired: name, sku (unique), unitPrice\nOptional: description, stock (default 0), category\nResponse: ProductDTO with id"
           },
           "response": []
         },
@@ -228,12 +231,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["products", "1"]
             },
-            "description": "Get product details by ID"
+            "description": "Get product details by ID (public endpoint).\nNo authentication required\nResponse: ProductDTO"
           },
           "response": []
         },
         {
-          "name": "Get All Products",
+          "name": "Get All Products (Paginated)",
           "request": {
             "method": "GET",
             "header": [],
@@ -244,28 +247,32 @@
               "query": [
                 {
                   "key": "page",
-                  "value": "0"
+                  "value": "0",
+                  "description": "Page number (default: 0)"
                 },
                 {
                   "key": "size",
-                  "value": "10"
+                  "value": "10",
+                  "description": "Page size (default: 10)"
                 },
                 {
                   "key": "sortBy",
-                  "value": "id"
+                  "value": "id",
+                  "description": "Sort field (default: id)"
                 },
                 {
                   "key": "sortDirection",
-                  "value": "ASC"
+                  "value": "ASC",
+                  "description": "Sort direction: ASC or DESC (default: ASC)"
                 }
               ]
             },
-            "description": "List all products with pagination and sorting"
+            "description": "Get paginated list of products (public endpoint).\nNo authentication required\nQuery params: page, size, sortBy, sortDirection\nResponse: Page<ProductDTO>"
           },
           "response": []
         },
         {
-          "name": "Update Product",
+          "name": "Update Product (Admin)",
           "request": {
             "method": "PUT",
             "header": [
@@ -276,19 +283,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Laptop Pro\",\n  \"sku\": \"LAPTOP-001\",\n  \"unitPrice\": 1299.99,\n  \"stock\": 45,\n  \"description\": \"Updated description\"\n}"
+              "raw": "{\n  \"name\": \"Updated Premium Widget\",\n  \"sku\": \"WIDGET-001\",\n  \"description\": \"Updated description\",\n  \"unitPrice\": 109.99,\n  \"stock\": 150,\n  \"category\": \"Electronics\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/products/1",
               "host": ["{{baseUrl}}"],
               "path": ["products", "1"]
             },
-            "description": "Update product (ADMIN only)"
+            "description": "Update existing product.\nRequires: @RequireRole(ADMIN)\nRequired: name, sku, unitPrice\nOptional: description, stock, category\nResponse: ProductDTO"
           },
           "response": []
         },
         {
-          "name": "Delete Product",
+          "name": "Delete Product (Admin - Soft Delete)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -297,17 +304,18 @@
               "host": ["{{baseUrl}}"],
               "path": ["products", "1"]
             },
-            "description": "Soft delete product (ADMIN only)"
+            "description": "Soft delete product (sets deleted flag to true).\nRequires: @RequireRole(ADMIN)\nResponse: 204 No Content"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Orders",
+      "name": "4. Orders",
+      "description": "Order management - creation, tracking, confirmation, cancellation",
       "item": [
         {
-          "name": "Create Order",
+          "name": "Create Order (Admin)",
           "request": {
             "method": "POST",
             "header": [
@@ -318,14 +326,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 1,\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"productId\": 2,\n      \"quantity\": 1\n    }\n  ],\n  \"couponCode\": \"PROMO-XXXX\"\n}"
+              "raw": "{\n  \"userId\": 2,\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 3\n    },\n    {\n      \"productId\": 2,\n      \"quantity\": 5\n    }\n  ],\n  \"couponCode\": \"PROMO-ABC1\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
               "host": ["{{baseUrl}}"],
               "path": ["orders"]
             },
-            "description": "Create new order (ADMIN only). Admin creates orders on behalf of clients"
+            "description": "Create new order for a user.\nRequires: @RequireRole(ADMIN)\nRequired: userId, items (list with productId and quantity)\nOptional: couponCode\nBusiness logic: Validates user exists, products exist, calculates totals, applies tax (20%), applies coupon discount\nResponse: OrderDTO with status PENDING"
           },
           "response": []
         },
@@ -339,26 +347,26 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders", "1"]
             },
-            "description": "Get order details (clients can view own orders, ADMIN can view all)"
+            "description": "Get order details by ID.\nRequires: @RequireAuth\nAuthorization: Client can only view their own orders, Admin can view any\nResponse: OrderDTO"
           },
           "response": []
         },
         {
-          "name": "Get Orders By User",
+          "name": "Get Orders By User ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/orders/user/1",
+              "raw": "{{baseUrl}}/orders/user/2",
               "host": ["{{baseUrl}}"],
-              "path": ["orders", "user", "1"]
+              "path": ["orders", "user", "2"]
             },
-            "description": "Get all orders for a specific user (clients can view own, ADMIN can view any)"
+            "description": "Get all orders for a specific user.\nRequires: @RequireAuth\nAuthorization: Client can only view their own orders, Admin can view any user's orders\nResponse: List<OrderDTO>"
           },
           "response": []
         },
         {
-          "name": "Get All Orders",
+          "name": "Get All Orders (Admin)",
           "request": {
             "method": "GET",
             "header": [],
@@ -367,12 +375,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders"]
             },
-            "description": "List all orders (ADMIN only)"
+            "description": "Get all orders in the system.\nRequires: @RequireRole(ADMIN)\nResponse: List<OrderDTO>"
           },
           "response": []
         },
         {
-          "name": "Confirm Order",
+          "name": "Confirm Order (Admin)",
           "request": {
             "method": "PUT",
             "header": [],
@@ -381,7 +389,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders", "1", "confirm"]
             },
-            "description": "Confirm pending order (ADMIN only). Can only confirm if payment received"
+            "description": "Confirm order - changes status from PENDING to CONFIRMED.\nRequires: @RequireRole(ADMIN)\nBusiness logic: Only PENDING orders can be confirmed\nResponse: OrderDTO with status CONFIRMED"
           },
           "response": []
         },
@@ -395,17 +403,18 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders", "1", "cancel"]
             },
-            "description": "Cancel pending order (authenticated users can cancel own, ADMIN can cancel any)"
+            "description": "Cancel order - changes status to CANCELED.\nRequires: @RequireAuth\nAuthorization: Client can cancel their own orders, Admin can cancel any\nBusiness logic: Only PENDING or CONFIRMED orders can be canceled, restores stock if payments exist\nResponse: OrderDTO with status CANCELED"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Payments",
+      "name": "5. Payments",
+      "description": "Payment processing - track and manage order payments with multiple methods",
       "item": [
         {
-          "name": "Create Payment",
+          "name": "Create Payment (Admin)",
           "request": {
             "method": "POST",
             "header": [
@@ -416,14 +425,60 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": 1,\n  \"amount\": 100.00,\n  \"paymentMethod\": \"TRANSFER\",\n  \"reference\": \"REF12345\"\n}"
+              "raw": "{\n  \"orderId\": 1,\n  \"paymentNumber\": 1,\n  \"amount\": 100.00,\n  \"paymentMethod\": \"TRANSFER\",\n  \"paymentDate\": \"2025-12-07\",\n  \"reference\": \"TRF-2025-001\",\n  \"status\": \"PENDING\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/payments",
               "host": ["{{baseUrl}}"],
               "path": ["payments"]
             },
-            "description": "Register payment for order (ADMIN only). On first payment: stock is deducted, coupon marked as used, pending orders checked"
+            "description": "Create payment for an order.\nRequires: @RequireRole(ADMIN)\nRequired fields: orderId, paymentNumber, amount, paymentMethod, paymentDate, reference, status\nPaymentMethod: CASH, CHECK, TRANSFER\nPaymentStatus: PENDING, COLLECTED\nOptional: collectionDate, bankName (for CHECK), dueDate\nBusiness logic on first payment: deducts stock, marks coupon as used, checks pending orders\nResponse: PaymentDTO"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Payment - CHECK Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": 1,\n  \"paymentNumber\": 2,\n  \"amount\": 150.00,\n  \"paymentMethod\": \"CHECK\",\n  \"paymentDate\": \"2025-12-07\",\n  \"collectionDate\": \"2025-12-15\",\n  \"reference\": \"CHK-2025-002\",\n  \"bankName\": \"BNP Paribas\",\n  \"status\": \"PENDING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments"]
+            },
+            "description": "Create CHECK payment with additional fields.\nRequires: @RequireRole(ADMIN)\nCHECK-specific fields: collectionDate, bankName\nResponse: PaymentDTO"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Payment - CASH Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": 1,\n  \"paymentNumber\": 3,\n  \"amount\": 50.00,\n  \"paymentMethod\": \"CASH\",\n  \"paymentDate\": \"2025-12-07\",\n  \"reference\": \"CASH-2025-003\",\n  \"status\": \"COLLECTED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments"]
+            },
+            "description": "Create CASH payment (usually COLLECTED immediately).\nRequires: @RequireRole(ADMIN)\nResponse: PaymentDTO"
           },
           "response": []
         },
@@ -437,12 +492,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["payments", "1"]
             },
-            "description": "Get payment details (authenticated users can view own order payments, ADMIN can view all)"
+            "description": "Get payment details by ID.\nRequires: @RequireAuth\nAuthorization: Client can only view payments for their own orders, Admin can view any\nResponse: PaymentDTO"
           },
           "response": []
         },
         {
-          "name": "Get Payments By Order",
+          "name": "Get Payments By Order ID",
           "request": {
             "method": "GET",
             "header": [],
@@ -451,12 +506,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["payments", "order", "1"]
             },
-            "description": "Get all payments for specific order (authenticated users can view own order, ADMIN can view any)"
+            "description": "Get all payments for a specific order.\nRequires: @RequireAuth\nAuthorization: Client can only view payments for their own orders, Admin can view any\nResponse: List<PaymentDTO>"
           },
           "response": []
         },
         {
-          "name": "Get All Payments",
+          "name": "Get All Payments (Admin)",
           "request": {
             "method": "GET",
             "header": [],
@@ -465,12 +520,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["payments"]
             },
-            "description": "List all payments (ADMIN only)"
+            "description": "Get all payments in the system.\nRequires: @RequireRole(ADMIN)\nResponse: List<PaymentDTO>"
           },
           "response": []
         },
         {
-          "name": "Update Payment",
+          "name": "Update Payment (Admin)",
           "request": {
             "method": "PUT",
             "header": [
@@ -481,19 +536,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": 1,\n  \"amount\": 120.00,\n  \"paymentMethod\": \"CHEQUE\",\n  \"reference\": \"CHEQUE-001\"\n}"
+              "raw": "{\n  \"orderId\": 1,\n  \"paymentNumber\": 1,\n  \"amount\": 120.00,\n  \"paymentMethod\": \"TRANSFER\",\n  \"paymentDate\": \"2025-12-07\",\n  \"reference\": \"TRF-2025-001-UPDATED\",\n  \"status\": \"COLLECTED\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/payments/1",
               "host": ["{{baseUrl}}"],
               "path": ["payments", "1"]
             },
-            "description": "Update payment details (ADMIN only)"
+            "description": "Update payment details (e.g., change status from PENDING to COLLECTED).\nRequires: @RequireRole(ADMIN)\nAll required fields must be provided\nResponse: PaymentDTO"
           },
           "response": []
         },
         {
-          "name": "Delete Payment",
+          "name": "Delete Payment (Admin)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -502,17 +557,18 @@
               "host": ["{{baseUrl}}"],
               "path": ["payments", "1"]
             },
-            "description": "Delete payment (ADMIN only)"
+            "description": "Delete payment and restore order remaining amount.\nRequires: @RequireRole(ADMIN)\nBusiness logic: Updates order's remaining amount\nResponse: 204 No Content"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Coupons",
+      "name": "6. Coupons",
+      "description": "Coupon/discount management - create, validate, and track usage",
       "item": [
         {
-          "name": "Create Coupon",
+          "name": "Create Coupon (Admin)",
           "request": {
             "method": "POST",
             "header": [
@@ -523,14 +579,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"PROMO-SUMMER2024\",\n  \"discountPercentage\": 15.00\n}"
+              "raw": "{\n  \"code\": \"PROMO-XYZ9\",\n  \"discountPercentage\": 15.00\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/coupons",
               "host": ["{{baseUrl}}"],
               "path": ["coupons"]
             },
-            "description": "Create new coupon (ADMIN only). Code format must be PROMO-XXXX"
+            "description": "Create new coupon.\nRequires: @RequireRole(ADMIN)\nRequired: code (format: PROMO-XXXX where X is alphanumeric), discountPercentage\nValidation: Code must match pattern PROMO-[A-Z0-9]{4}\nDefault: isUsed = false\nResponse: CouponDTO"
           },
           "response": []
         },
@@ -544,7 +600,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["coupons", "1"]
             },
-            "description": "Get coupon details by ID"
+            "description": "Get coupon by ID (public endpoint).\nNo authentication required\nResponse: CouponDTO"
           },
           "response": []
         },
@@ -554,16 +610,16 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/coupons/code/PROMO-SUMMER2024",
+              "raw": "{{baseUrl}}/coupons/code/PROMO-XYZ9",
               "host": ["{{baseUrl}}"],
-              "path": ["coupons", "code", "PROMO-SUMMER2024"]
+              "path": ["coupons", "code", "PROMO-XYZ9"]
             },
-            "description": "Get coupon details by code"
+            "description": "Get coupon by code (public endpoint for validation).\nNo authentication required\nResponse: CouponDTO"
           },
           "response": []
         },
         {
-          "name": "Get All Coupons",
+          "name": "Get All Coupons (Admin)",
           "request": {
             "method": "GET",
             "header": [],
@@ -572,12 +628,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["coupons"]
             },
-            "description": "List all coupons (ADMIN only)"
+            "description": "Get all coupons.\nRequires: @RequireRole(ADMIN)\nResponse: List<CouponDTO>"
           },
           "response": []
         },
         {
-          "name": "Update Coupon",
+          "name": "Update Coupon (Admin)",
           "request": {
             "method": "PUT",
             "header": [
@@ -588,19 +644,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"PROMO-SUMMER2024\",\n  \"discountPercentage\": 20.00\n}"
+              "raw": "{\n  \"code\": \"PROMO-XYZ9\",\n  \"discountPercentage\": 20.00\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/coupons/1",
               "host": ["{{baseUrl}}"],
               "path": ["coupons", "1"]
             },
-            "description": "Update coupon (ADMIN only)"
+            "description": "Update coupon details.\nRequires: @RequireRole(ADMIN)\nRequired: code (pattern validated), discountPercentage\nResponse: CouponDTO"
           },
           "response": []
         },
         {
-          "name": "Delete Coupon",
+          "name": "Delete Coupon (Admin)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -609,21 +665,21 @@
               "host": ["{{baseUrl}}"],
               "path": ["coupons", "1"]
             },
-            "description": "Delete coupon (ADMIN only)"
+            "description": "Delete coupon permanently.\nRequires: @RequireRole(ADMIN)\nResponse: 204 No Content"
           },
           "response": []
         },
         {
-          "name": "Use Coupon",
+          "name": "Use Coupon (Admin)",
           "request": {
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/coupons/use/PROMO-SUMMER2024",
+              "raw": "{{baseUrl}}/coupons/use/PROMO-XYZ9",
               "host": ["{{baseUrl}}"],
-              "path": ["coupons", "use", "PROMO-SUMMER2024"]
+              "path": ["coupons", "use", "PROMO-XYZ9"]
             },
-            "description": "Mark coupon as used and delete it (ADMIN only). Called automatically on first payment"
+            "description": "Mark coupon as used and delete it (called automatically on first payment).\nRequires: @RequireRole(ADMIN)\nResponse: 204 No Content"
           },
           "response": []
         }
