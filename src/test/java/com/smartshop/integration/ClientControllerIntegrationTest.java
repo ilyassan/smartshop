@@ -53,11 +53,11 @@ class ClientControllerIntegrationTest extends BaseIntegrationTest {
         clientUser = userRepository.save(clientUser);
 
         adminSession = new MockHttpSession();
-        adminSession.setAttribute("LOGGED_IN_USER", adminUser.getId());
+        adminSession.setAttribute("userId", adminUser.getId());
         adminSession.setAttribute("userRole", "ADMIN");
 
         clientSession = new MockHttpSession();
-        clientSession.setAttribute("LOGGED_IN_USER", clientUser.getId());
+        clientSession.setAttribute("userId", clientUser.getId());
         clientSession.setAttribute("userRole", "CLIENT");
     }
 

@@ -58,7 +58,7 @@ class ProductControllerIntegrationTest extends BaseIntegrationTest {
         testProduct = productRepository.save(testProduct);
 
         adminSession = new MockHttpSession();
-        adminSession.setAttribute("LOGGED_IN_USER", adminUser.getId());
+        adminSession.setAttribute("userId", adminUser.getId());
         adminSession.setAttribute("userRole", "ADMIN");
     }
 

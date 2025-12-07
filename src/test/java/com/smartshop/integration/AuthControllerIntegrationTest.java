@@ -89,7 +89,7 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void getCurrentUser_Success() throws Exception {
-        session.setAttribute("LOGGED_IN_USER", testUser.getId());
+        session.setAttribute("userId", testUser.getId());
 
         mockMvc.perform(get("/auth/me")
                         .session(session))
@@ -108,7 +108,7 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void logout_Success() throws Exception {
-        session.setAttribute("LOGGED_IN_USER", testUser.getId());
+        session.setAttribute("userId", testUser.getId());
 
         mockMvc.perform(post("/auth/logout")
                         .session(session))

@@ -37,9 +37,9 @@ public class AuthorizationAspect {
             throw new UnauthorizedException("Please login first");
         }
 
-        Object userId = session.getAttribute("LOGGED_IN_USER");
+        Object userId = session.getAttribute("userId");
         if (userId == null) {
-            log.warn("No LOGGED_IN_USER in session for method: {}", joinPoint.getSignature());
+            log.warn("No userId in session for method: {}", joinPoint.getSignature());
             throw new UnauthorizedException("Please login first");
         }
 

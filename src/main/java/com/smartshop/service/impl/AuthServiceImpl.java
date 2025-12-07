@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthServiceImpl implements AuthService {
 
-    private static final String SESSION_USER_KEY = "LOGGED_IN_USER";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -37,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid username or password");
         }
 
-        session.setAttribute(SESSION_USER_KEY, user.getId());
+        session.setAttribute("userId", user.getId());
         session.setAttribute("userRole", user.getRole().name());
         log.info("User {} logged in successfully with role {}", user.getUsername(), user.getRole());
 
@@ -56,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public AuthResponse getCurrentUser(HttpSession session) {
-        Long userId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long userId = (Long) session.getAttribute("userId");
 
         if (userId == null) {
             throw new UnauthorizedException("Not authenticated. Please login first");
@@ -78,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(HttpSession session) {
-        Long userId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long userId = (Long) session.getAttribute("userId");
 
         if (userId != null) {
             log.info("User with ID {} logged out", userId);

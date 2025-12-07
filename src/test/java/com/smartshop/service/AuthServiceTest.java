@@ -81,7 +81,7 @@ class AuthServiceTest {
         assertEquals("Login successful", response.getMessage());
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder).matches("plainPassword", "encodedPassword");
-        verify(session).setAttribute("LOGGED_IN_USER", 1L);
+        verify(session).setAttribute("userId", 1L);
         verify(session).setAttribute("userRole", "CLIENT");
     }
 
@@ -119,7 +119,7 @@ class AuthServiceTest {
                 .role(UserRole.CLIENT)
                 .build();
 
-        when(session.getAttribute("LOGGED_IN_USER")).thenReturn(1L);
+        when(session.getAttribute("userId")).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userMapper.toDTO(user)).thenReturn(userDTO);
 
@@ -129,32 +129,32 @@ class AuthServiceTest {
         assertEquals(1L, response.getId());
         assertEquals("testuser", response.getUsername());
         assertEquals(UserRole.CLIENT, response.getRole());
-        verify(session).getAttribute("LOGGED_IN_USER");
+        verify(session).getAttribute("userId");
         verify(userRepository).findById(1L);
     }
 
     @Test
     void getCurrentUser_NotLoggedIn_ThrowsException() {
-        when(session.getAttribute("LOGGED_IN_USER")).thenReturn(null);
+        when(session.getAttribute("userId")).thenReturn(null);
 
         UnauthorizedException exception = assertThrows(UnauthorizedException.class, () -> {
             authService.getCurrentUser(session);
         });
         assertEquals("Not authenticated. Please login first", exception.getMessage());
-        verify(session).getAttribute("LOGGED_IN_USER");
+        verify(session).getAttribute("userId");
         verify(userRepository, never()).findById(anyLong());
     }
 
     @Test
     void getCurrentUser_UserNotFoundInDB_ThrowsException() {
-        when(session.getAttribute("LOGGED_IN_USER")).thenReturn(1L);
+        when(session.getAttribute("userId")).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         UnauthorizedException exception = assertThrows(UnauthorizedException.class, () -> {
             authService.getCurrentUser(session);
         });
         assertEquals("Session invalid. Please login again", exception.getMessage());
-        verify(session).getAttribute("LOGGED_IN_USER");
+        verify(session).getAttribute("userId");
         verify(userRepository).findById(1L);
     }
 

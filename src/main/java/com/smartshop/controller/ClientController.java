@@ -22,7 +22,6 @@ import java.util.List;
 @Slf4j
 public class ClientController {
 
-    private static final String SESSION_USER_KEY = "LOGGED_IN_USER";
     private final ClientService clientService;
 
     @PostMapping
@@ -35,7 +34,7 @@ public class ClientController {
     @GetMapping("/{id}")
     @RequireAuth
     public ResponseEntity<UserDTO> getClientById(@PathVariable Long id, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
         String userRole = (String) session.getAttribute("userRole");
 
         if (!userRole.equals("ADMIN") && !loggedInUserId.equals(id)) {
@@ -58,7 +57,7 @@ public class ClientController {
     @PutMapping("/{id}")
     @RequireAuth
     public ResponseEntity<UserDTO> updateClient(@PathVariable Long id, @Valid @RequestBody UserDTO user, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
         String userRole = (String) session.getAttribute("userRole");
 
         if (!userRole.equals("ADMIN") && !loggedInUserId.equals(id)) {
@@ -81,7 +80,7 @@ public class ClientController {
     @GetMapping("/{id}/statistics")
     @RequireAuth
     public ResponseEntity<ClientStatistics> getClientStatistics(@PathVariable Long id, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
         String userRole = (String) session.getAttribute("userRole");
 
         if (!userRole.equals("ADMIN") && !loggedInUserId.equals(id)) {

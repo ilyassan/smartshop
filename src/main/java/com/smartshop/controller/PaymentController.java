@@ -23,7 +23,6 @@ import java.util.List;
 @Slf4j
 public class PaymentController {
 
-    private static final String SESSION_USER_KEY = "LOGGED_IN_USER";
     private final PaymentService paymentService;
     private final OrderService orderService;
 
@@ -40,7 +39,7 @@ public class PaymentController {
     @GetMapping("/{id}")
     @RequireAuth
     public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable Long id, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
 
         PaymentDTO payment = paymentService.getPaymentById(id);
         OrderDTO order = orderService.getOrderById(payment.getOrderId());
@@ -57,7 +56,7 @@ public class PaymentController {
     @GetMapping("/order/{orderId}")
     @RequireAuth
     public ResponseEntity<List<PaymentDTO>> getPaymentsByOrderId(@PathVariable Long orderId, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
 
         OrderDTO order = orderService.getOrderById(orderId);
 

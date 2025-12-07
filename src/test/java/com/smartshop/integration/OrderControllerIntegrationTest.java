@@ -87,11 +87,11 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
         product = productRepository.save(product);
 
         adminSession = new MockHttpSession();
-        adminSession.setAttribute("LOGGED_IN_USER", adminUser.getId());
+        adminSession.setAttribute("userId", adminUser.getId());
         adminSession.setAttribute("userRole", "ADMIN");
 
         clientSession = new MockHttpSession();
-        clientSession.setAttribute("LOGGED_IN_USER", clientUser.getId());
+        clientSession.setAttribute("userId", clientUser.getId());
         clientSession.setAttribute("userRole", "CLIENT");
     }
 
@@ -191,7 +191,7 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
         anotherClient = userRepository.save(anotherClient);
 
         MockHttpSession anotherClientSession = new MockHttpSession();
-        anotherClientSession.setAttribute("LOGGED_IN_USER", anotherClient.getId());
+        anotherClientSession.setAttribute("userId", anotherClient.getId());
         anotherClientSession.setAttribute("userRole", "CLIENT");
 
         mockMvc.perform(get("/orders/" + order.getId())
@@ -240,7 +240,7 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
         anotherClient = userRepository.save(anotherClient);
 
         MockHttpSession anotherClientSession = new MockHttpSession();
-        anotherClientSession.setAttribute("LOGGED_IN_USER", anotherClient.getId());
+        anotherClientSession.setAttribute("userId", anotherClient.getId());
         anotherClientSession.setAttribute("userRole", "CLIENT");
 
         Order order = createTestOrder(clientUser, product);
@@ -305,7 +305,7 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
         anotherClient = userRepository.save(anotherClient);
 
         MockHttpSession anotherClientSession = new MockHttpSession();
-        anotherClientSession.setAttribute("LOGGED_IN_USER", anotherClient.getId());
+        anotherClientSession.setAttribute("userId", anotherClient.getId());
         anotherClientSession.setAttribute("userRole", "CLIENT");
 
         mockMvc.perform(put("/orders/" + order.getId() + "/cancel")

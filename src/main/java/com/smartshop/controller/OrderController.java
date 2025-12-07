@@ -22,7 +22,6 @@ import java.util.List;
 @Slf4j
 public class OrderController {
 
-    private static final String SESSION_USER_KEY = "LOGGED_IN_USER";
     private final OrderService orderService;
 
     @PostMapping
@@ -35,7 +34,7 @@ public class OrderController {
     @GetMapping("/{id}")
     @RequireAuth
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
 
         OrderDTO order = orderService.getOrderById(id);
 
@@ -50,7 +49,7 @@ public class OrderController {
     @GetMapping("/user/{userId}")
     @RequireAuth
     public ResponseEntity<List<OrderDTO>> getOrdersByUserId(@PathVariable Long userId, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
 
         String userRole = (String) session.getAttribute("userRole");
         if (!userRole.equals("ADMIN") && !loggedInUserId.equals(userId)) {
@@ -78,7 +77,7 @@ public class OrderController {
     @PutMapping("/{id}/cancel")
     @RequireAuth
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id, HttpSession session) {
-        Long loggedInUserId = (Long) session.getAttribute(SESSION_USER_KEY);
+        Long loggedInUserId = (Long) session.getAttribute("userId");
 
         OrderDTO order = orderService.getOrderById(id);
 

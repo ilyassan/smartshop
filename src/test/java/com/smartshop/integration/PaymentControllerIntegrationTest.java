@@ -106,11 +106,11 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
         order = orderRepository.save(order);
 
         adminSession = new MockHttpSession();
-        adminSession.setAttribute("LOGGED_IN_USER", adminUser.getId());
+        adminSession.setAttribute("userId", adminUser.getId());
         adminSession.setAttribute("userRole", "ADMIN");
 
         clientSession = new MockHttpSession();
-        clientSession.setAttribute("LOGGED_IN_USER", clientUser.getId());
+        clientSession.setAttribute("userId", clientUser.getId());
         clientSession.setAttribute("userRole", "CLIENT");
     }
 
@@ -207,7 +207,7 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
         anotherClient = userRepository.save(anotherClient);
 
         MockHttpSession anotherClientSession = new MockHttpSession();
-        anotherClientSession.setAttribute("LOGGED_IN_USER", anotherClient.getId());
+        anotherClientSession.setAttribute("userId", anotherClient.getId());
         anotherClientSession.setAttribute("userRole", "CLIENT");
 
         mockMvc.perform(get("/payments/" + payment.getId())
@@ -256,7 +256,7 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
         anotherClient = userRepository.save(anotherClient);
 
         MockHttpSession anotherClientSession = new MockHttpSession();
-        anotherClientSession.setAttribute("LOGGED_IN_USER", anotherClient.getId());
+        anotherClientSession.setAttribute("userId", anotherClient.getId());
         anotherClientSession.setAttribute("userRole", "CLIENT");
 
         Payment payment = createTestPayment(order);
