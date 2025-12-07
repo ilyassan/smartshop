@@ -118,11 +118,3 @@ docker-compose up -d
 ```bash
 ./mvnw test
 ```
-
-## License
-
-This project is developed for MicroTech Maroc.
-
-## Authors
-
-- Development Team - Initial work
